@@ -1,0 +1,164 @@
+[
+  {
+    "id": "table.oAuthAccount",
+    "label": "Create table \"oAuthAccount\"",
+    "summary": "Creates table \"oAuthAccount\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "oAuthAccount"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"oAuthAccount\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"oAuthAccount\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"oAuthAccount\"",
+        "sql": "CREATE TABLE \"public\".\"oAuthAccount\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"provider\" text NOT NULL,\n  \"providerAccountId\" text NOT NULL,\n  \"updatedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"oAuthAccount\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"oAuthAccount\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.oAuthAccount.oAuthAccount_provider_providerAccountId_key",
+    "label": "Add unique constraint on \"oAuthAccount\" (provider, providerAccountId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "oAuthAccount_provider_providerAccountId_key",
+        "table": "oAuthAccount"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"oAuthAccount_provider_providerAccountId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "oAuthAccount_provider_providerAccountId_key",
+          "public",
+          "\"public\".\"oAuthAccount\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"oAuthAccount_provider_providerAccountId_key\"",
+        "sql": "ALTER TABLE \"public\".\"oAuthAccount\" ADD CONSTRAINT \"oAuthAccount_provider_providerAccountId_key\" UNIQUE (\"provider\", \"providerAccountId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"oAuthAccount_provider_providerAccountId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "oAuthAccount_provider_providerAccountId_key",
+          "public",
+          "\"public\".\"oAuthAccount\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.oAuthAccount.oAuthAccount_userId_idx_a489d58a",
+    "label": "Create index \"oAuthAccount_userId_idx_a489d58a\" on \"oAuthAccount\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "oAuthAccount_userId_idx_a489d58a",
+        "table": "oAuthAccount"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"oAuthAccount_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"oAuthAccount_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"oAuthAccount_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"oAuthAccount_userId_idx_a489d58a\" ON \"public\".\"oAuthAccount\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"oAuthAccount_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"oAuthAccount_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.oAuthAccount.oAuthAccount_userId_fkey",
+    "label": "Add foreign key \"oAuthAccount_userId_fkey\" on \"oAuthAccount\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "oAuthAccount_userId_fkey",
+        "table": "oAuthAccount"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"oAuthAccount_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "oAuthAccount_userId_fkey",
+          "public",
+          "\"public\".\"oAuthAccount\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"oAuthAccount_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"oAuthAccount\"\nADD CONSTRAINT \"oAuthAccount_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"oAuthAccount_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "oAuthAccount_userId_fkey",
+          "public",
+          "\"public\".\"oAuthAccount\""
+        ]
+      }
+    ]
+  }
+]

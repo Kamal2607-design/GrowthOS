@@ -1,0 +1,168 @@
+// use prisma-8
+
+model User {
+  id           Int             @id @default(autoincrement())
+  email        String          @unique
+  username     String?         @unique
+  name         String?
+  passwordHash String?
+
+  vision       Vision?
+  goals        Goal[]
+  actions      Action[]
+  reflections  Reflection[]
+  documents    Document[]
+  memories     Memory[]
+  timeline     TimelineEvent[]
+  oauthAccounts OAuthAccount[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+}
+
+model Vision {
+  id          Int             @id @default(autoincrement())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int             @unique
+
+  statement   String
+  values      String?
+  identity    String?
+  futureSelf  String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+}
+
+model Goal {
+  id          Int             @id @default(autoincrement())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+
+  title       String
+  description String?
+  status      String          @default("active")
+  priority    Int             @default(0)
+  targetDate  DateTime?
+
+  actions     Action[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Action {
+  id          Int             @id @default(autoincrement())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+
+  goal        Goal?           @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  goalId      Int?
+
+  title       String
+  description String?
+  status      String          @default("pending")
+  priority    Int             @default(0)
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([goalId])
+  @@index([status])
+}
+
+model Reflection {
+  id          Int             @id @default(autoincrement())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+
+  content     String
+  mood        String?
+  productivity Int?
+  highlights  String?
+  challenges  String?
+  learnings   String?
+
+  reflectionDate DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([reflectionDate])
+}
+
+model Document {
+  id             Int             @id @default(autoincrement())
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         Int
+
+  fileName       String
+  filePath       String
+  mimeType       String
+  fileSize       Int
+  processingStatus String        @default("pending")
+
+  extractedText  String?
+  summary        String?
+  structuredData String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([processingStatus])
+}
+
+model Memory {
+  id          Int             @id @default(autoincrement())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+
+  type        String
+  content     String
+  source      String?
+  importance  Int             @default(1)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([type])
+}
+
+model TimelineEvent {
+  id          Int             @id @default(autoincrement())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+
+  eventType   String
+  title       String
+  description String?
+  eventDate   DateTime @default(now())
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([eventDate])
+  @@index([eventType])
+}
+
+model OAuthAccount {
+  id                Int      @id @default(autoincrement())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            Int
+
+  provider          String
+  providerAccountId String
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now())
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
