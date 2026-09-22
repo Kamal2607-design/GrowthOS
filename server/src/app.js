@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import authRoutes from './routes/auth.routes.js';
 import cookieParser from 'cookie-parser';
 import visionRoutes from './routes/vision.routes.js';
+import goalRoutes from './routes/goal.routes.js';
 const app = express();
 
 app.use(helmet());
@@ -24,5 +25,6 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/vision', visionRoutes);
+app.use('/api/goals', goalRoutes);
 
 export default app;

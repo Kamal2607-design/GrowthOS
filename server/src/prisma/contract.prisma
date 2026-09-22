@@ -1,20 +1,22 @@
 // use prisma-8
 
 model User {
-  id           Int             @id @default(autoincrement())
-  email        String          @unique
-  username     String?         @unique
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  username     String?  @unique
   name         String?
   passwordHash String?
+
+  oauthAccounts OAuthAccount[]
 
   vision       Vision?
   goals        Goal[]
   actions      Action[]
+  actionSuggestions ActionSuggestion[]
   reflections  Reflection[]
   documents    Document[]
   memories     Memory[]
   timeline     TimelineEvent[]
-  oauthAccounts OAuthAccount[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @default(now())
@@ -35,17 +37,20 @@ model Vision {
 }
 
 model Goal {
-  id          Int             @id @default(autoincrement())
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          Int      @id @default(autoincrement())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
 
   title       String
   description String?
-  status      String          @default("active")
-  priority    Int             @default(0)
+  status      String   @default("active")
+  priority    Int      @default(0)
   targetDate  DateTime?
 
   actions     Action[]
+  suggestions ActionSuggestion[]
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now())
 
@@ -54,17 +59,22 @@ model Goal {
 }
 
 model Action {
-  id          Int             @id @default(autoincrement())
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          Int      @id @default(autoincrement())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
 
-  goal        Goal?           @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  goal        Goal?    @relation(fields: [goalId], references: [id], onDelete: Cascade)
   goalId      Int?
+
+  suggestion  ActionSuggestion? @relation(fields: [suggestionId], references: [id], onDelete: SetNull)
+  suggestionId Int? @unique
 
   title       String
   description String?
-  status      String          @default("pending")
-  priority    Int             @default(0)
+  status      String   @default("pending")
+  priority    Int      @default(0)
+
   dueDate     DateTime?
   completedAt DateTime?
 
@@ -165,4 +175,32 @@ model OAuthAccount {
 
   @@unique([provider, providerAccountId])
   @@index([userId])
+}
+
+model ActionSuggestion {
+  id          Int      @id @default(autoincrement())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+
+  goal        Goal?    @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  goalId      Int?
+
+  title       String
+  description String?
+
+  priority    Int      @default(0)
+  reasoning   String?
+
+  status      String   @default("pending")
+  source      String   @default("ai")
+
+  action      Action?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([goalId])
+  @@index([status])
 }
