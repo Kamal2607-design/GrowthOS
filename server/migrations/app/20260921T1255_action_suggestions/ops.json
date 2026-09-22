@@ -1,0 +1,368 @@
+[
+  {
+    "id": "table.actionSuggestion",
+    "label": "Create table \"actionSuggestion\"",
+    "summary": "Creates table \"actionSuggestion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "actionSuggestion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"actionSuggestion\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"actionSuggestion\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"actionSuggestion\"",
+        "sql": "CREATE TABLE \"public\".\"actionSuggestion\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text,\n  \"goalId\" int4,\n  \"id\" SERIAL NOT NULL,\n  \"priority\" int4 DEFAULT 0 NOT NULL,\n  \"reasoning\" text,\n  \"source\" text DEFAULT 'ai' NOT NULL,\n  \"status\" text DEFAULT 'pending' NOT NULL,\n  \"title\" text NOT NULL,\n  \"updatedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"actionSuggestion\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"actionSuggestion\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.action.suggestionId",
+    "label": "Add column \"suggestionId\" to \"action\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "suggestionId",
+        "table": "action"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"suggestionId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "action",
+          "suggestionId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"suggestionId\"",
+        "sql": "ALTER TABLE \"public\".\"action\" ADD COLUMN \"suggestionId\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"suggestionId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "action",
+          "suggestionId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.action.action_suggestionId_key",
+    "label": "Add unique constraint on \"action\" (suggestionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "action_suggestionId_key",
+        "table": "action"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"action_suggestionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "action_suggestionId_key",
+          "public",
+          "\"public\".\"action\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"action_suggestionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"action\" ADD CONSTRAINT \"action_suggestionId_key\" UNIQUE (\"suggestionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"action_suggestionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "action_suggestionId_key",
+          "public",
+          "\"public\".\"action\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.actionSuggestion.actionSuggestion_goalId_idx_8733343e",
+    "label": "Create index \"actionSuggestion_goalId_idx_8733343e\" on \"actionSuggestion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "actionSuggestion_goalId_idx_8733343e",
+        "table": "actionSuggestion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"actionSuggestion_goalId_idx_8733343e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"actionSuggestion_goalId_idx_8733343e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"actionSuggestion_goalId_idx_8733343e\"",
+        "sql": "CREATE INDEX \"actionSuggestion_goalId_idx_8733343e\" ON \"public\".\"actionSuggestion\" (\"goalId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"actionSuggestion_goalId_idx_8733343e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"actionSuggestion_goalId_idx_8733343e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.actionSuggestion.actionSuggestion_status_idx_e98638ab",
+    "label": "Create index \"actionSuggestion_status_idx_e98638ab\" on \"actionSuggestion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "actionSuggestion_status_idx_e98638ab",
+        "table": "actionSuggestion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"actionSuggestion_status_idx_e98638ab\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"actionSuggestion_status_idx_e98638ab\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"actionSuggestion_status_idx_e98638ab\"",
+        "sql": "CREATE INDEX \"actionSuggestion_status_idx_e98638ab\" ON \"public\".\"actionSuggestion\" (\"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"actionSuggestion_status_idx_e98638ab\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"actionSuggestion_status_idx_e98638ab\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.actionSuggestion.actionSuggestion_userId_idx_a489d58a",
+    "label": "Create index \"actionSuggestion_userId_idx_a489d58a\" on \"actionSuggestion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "actionSuggestion_userId_idx_a489d58a",
+        "table": "actionSuggestion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"actionSuggestion_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"actionSuggestion_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"actionSuggestion_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"actionSuggestion_userId_idx_a489d58a\" ON \"public\".\"actionSuggestion\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"actionSuggestion_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"actionSuggestion_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.actionSuggestion.actionSuggestion_userId_fkey",
+    "label": "Add foreign key \"actionSuggestion_userId_fkey\" on \"actionSuggestion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "actionSuggestion_userId_fkey",
+        "table": "actionSuggestion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"actionSuggestion_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "actionSuggestion_userId_fkey",
+          "public",
+          "\"public\".\"actionSuggestion\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"actionSuggestion_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"actionSuggestion\"\nADD CONSTRAINT \"actionSuggestion_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"actionSuggestion_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "actionSuggestion_userId_fkey",
+          "public",
+          "\"public\".\"actionSuggestion\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.actionSuggestion.actionSuggestion_goalId_fkey",
+    "label": "Add foreign key \"actionSuggestion_goalId_fkey\" on \"actionSuggestion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "actionSuggestion_goalId_fkey",
+        "table": "actionSuggestion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"actionSuggestion_goalId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "actionSuggestion_goalId_fkey",
+          "public",
+          "\"public\".\"actionSuggestion\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"actionSuggestion_goalId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"actionSuggestion\"\nADD CONSTRAINT \"actionSuggestion_goalId_fkey\"\nFOREIGN KEY (\"goalId\")\nREFERENCES \"public\".\"goal\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"actionSuggestion_goalId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "actionSuggestion_goalId_fkey",
+          "public",
+          "\"public\".\"actionSuggestion\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.action.action_suggestionId_fkey",
+    "label": "Add foreign key \"action_suggestionId_fkey\" on \"action\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "action_suggestionId_fkey",
+        "table": "action"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"action_suggestionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "action_suggestionId_fkey",
+          "public",
+          "\"public\".\"action\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"action_suggestionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"action\"\nADD CONSTRAINT \"action_suggestionId_fkey\"\nFOREIGN KEY (\"suggestionId\")\nREFERENCES \"public\".\"actionSuggestion\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"action_suggestionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "action_suggestionId_fkey",
+          "public",
+          "\"public\".\"action\""
+        ]
+      }
+    ]
+  }
+]
