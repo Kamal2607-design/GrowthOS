@@ -6,6 +6,8 @@ import authRoutes from './routes/auth.routes.js';
 import cookieParser from 'cookie-parser';
 import visionRoutes from './routes/vision.routes.js';
 import goalRoutes from './routes/goal.routes.js';
+import actionRoutes from './routes/action.routes.js';
+import actionSuggestionRoutes from './routes/action-suggestion.routes.js';
 const app = express();
 
 app.use(helmet());
@@ -26,5 +28,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/vision', visionRoutes);
 app.use('/api/goals', goalRoutes);
+app.use('/api/actions', actionRoutes);
+app.use('/api/action-suggestions', actionSuggestionRoutes);
 
 export default app;
