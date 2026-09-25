@@ -1,0 +1,329 @@
+[
+  {
+    "id": "table.reflectionAnalysis",
+    "label": "Create table \"reflectionAnalysis\"",
+    "summary": "Creates table \"reflectionAnalysis\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "reflectionAnalysis"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"reflectionAnalysis\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"reflectionAnalysis\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"reflectionAnalysis\"",
+        "sql": "CREATE TABLE \"public\".\"reflectionAnalysis\" (\n  \"challenges\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"goalAlignment\" text,\n  \"highlights\" text,\n  \"id\" SERIAL NOT NULL,\n  \"learnings\" text,\n  \"moodAnalysis\" text,\n  \"productivityAnalysis\" text,\n  \"recommendedActions\" text,\n  \"reflectionId\" int4 NOT NULL,\n  \"summary\" text,\n  \"updatedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"reflectionAnalysis\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"reflectionAnalysis\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.actionSuggestion.reflectionId",
+    "label": "Add column \"reflectionId\" to \"actionSuggestion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "reflectionId",
+        "table": "actionSuggestion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"reflectionId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "actionSuggestion",
+          "reflectionId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"reflectionId\"",
+        "sql": "ALTER TABLE \"public\".\"actionSuggestion\" ADD COLUMN \"reflectionId\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"reflectionId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "actionSuggestion",
+          "reflectionId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.reflectionAnalysis.reflectionAnalysis_reflectionId_key",
+    "label": "Add unique constraint on \"reflectionAnalysis\" (reflectionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "reflectionAnalysis_reflectionId_key",
+        "table": "reflectionAnalysis"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"reflectionAnalysis_reflectionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "reflectionAnalysis_reflectionId_key",
+          "public",
+          "\"public\".\"reflectionAnalysis\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"reflectionAnalysis_reflectionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"reflectionAnalysis\" ADD CONSTRAINT \"reflectionAnalysis_reflectionId_key\" UNIQUE (\"reflectionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"reflectionAnalysis_reflectionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "reflectionAnalysis_reflectionId_key",
+          "public",
+          "\"public\".\"reflectionAnalysis\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.actionSuggestion.actionSuggestion_reflectionId_idx_c6b8fe2f",
+    "label": "Create index \"actionSuggestion_reflectionId_idx_c6b8fe2f\" on \"actionSuggestion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "actionSuggestion_reflectionId_idx_c6b8fe2f",
+        "table": "actionSuggestion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"actionSuggestion_reflectionId_idx_c6b8fe2f\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"actionSuggestion_reflectionId_idx_c6b8fe2f\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"actionSuggestion_reflectionId_idx_c6b8fe2f\"",
+        "sql": "CREATE INDEX \"actionSuggestion_reflectionId_idx_c6b8fe2f\" ON \"public\".\"actionSuggestion\" (\"reflectionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"actionSuggestion_reflectionId_idx_c6b8fe2f\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"actionSuggestion_reflectionId_idx_c6b8fe2f\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.reflectionAnalysis.reflectionAnalysis_userId_idx_a489d58a",
+    "label": "Create index \"reflectionAnalysis_userId_idx_a489d58a\" on \"reflectionAnalysis\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "reflectionAnalysis_userId_idx_a489d58a",
+        "table": "reflectionAnalysis"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"reflectionAnalysis_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"reflectionAnalysis_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"reflectionAnalysis_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"reflectionAnalysis_userId_idx_a489d58a\" ON \"public\".\"reflectionAnalysis\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"reflectionAnalysis_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"reflectionAnalysis_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.actionSuggestion.actionSuggestion_reflectionId_fkey",
+    "label": "Add foreign key \"actionSuggestion_reflectionId_fkey\" on \"actionSuggestion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "actionSuggestion_reflectionId_fkey",
+        "table": "actionSuggestion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"actionSuggestion_reflectionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "actionSuggestion_reflectionId_fkey",
+          "public",
+          "\"public\".\"actionSuggestion\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"actionSuggestion_reflectionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"actionSuggestion\"\nADD CONSTRAINT \"actionSuggestion_reflectionId_fkey\"\nFOREIGN KEY (\"reflectionId\")\nREFERENCES \"public\".\"reflection\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"actionSuggestion_reflectionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "actionSuggestion_reflectionId_fkey",
+          "public",
+          "\"public\".\"actionSuggestion\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.reflectionAnalysis.reflectionAnalysis_reflectionId_fkey",
+    "label": "Add foreign key \"reflectionAnalysis_reflectionId_fkey\" on \"reflectionAnalysis\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "reflectionAnalysis_reflectionId_fkey",
+        "table": "reflectionAnalysis"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"reflectionAnalysis_reflectionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "reflectionAnalysis_reflectionId_fkey",
+          "public",
+          "\"public\".\"reflectionAnalysis\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"reflectionAnalysis_reflectionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"reflectionAnalysis\"\nADD CONSTRAINT \"reflectionAnalysis_reflectionId_fkey\"\nFOREIGN KEY (\"reflectionId\")\nREFERENCES \"public\".\"reflection\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"reflectionAnalysis_reflectionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "reflectionAnalysis_reflectionId_fkey",
+          "public",
+          "\"public\".\"reflectionAnalysis\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.reflectionAnalysis.reflectionAnalysis_userId_fkey",
+    "label": "Add foreign key \"reflectionAnalysis_userId_fkey\" on \"reflectionAnalysis\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "reflectionAnalysis_userId_fkey",
+        "table": "reflectionAnalysis"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"reflectionAnalysis_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "reflectionAnalysis_userId_fkey",
+          "public",
+          "\"public\".\"reflectionAnalysis\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"reflectionAnalysis_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"reflectionAnalysis\"\nADD CONSTRAINT \"reflectionAnalysis_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"reflectionAnalysis_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "reflectionAnalysis_userId_fkey",
+          "public",
+          "\"public\".\"reflectionAnalysis\""
+        ]
+      }
+    ]
+  }
+]

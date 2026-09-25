@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'b2b410abcba1e19c6ecf86367ed70c03db3464b2222043595a083541ff109f23'>;
+  StorageHashBase<'d0315e589a9f7000b4d1c6d2479d526b0f07701277341e77552d95ca3d9a3f75'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -265,7 +265,6 @@ export type FieldOutputTypes = {
       readonly reasoning: CodecTypes['pg/text@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly source: CodecTypes['pg/text@1']['output'];
-      readonly reflectionId: CodecTypes['pg/int4@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
     };
@@ -396,7 +395,6 @@ export type FieldInputTypes = {
       readonly reasoning: CodecTypes['pg/text@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly source: CodecTypes['pg/text@1']['input'];
-      readonly reflectionId: CodecTypes['pg/int4@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
     };
@@ -524,7 +522,6 @@ export type StorageColumnTypes = {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly priority: CodecTypes['pg/int4@1']['output'];
       readonly reasoning: CodecTypes['pg/text@1']['output'] | null;
-      readonly reflectionId: CodecTypes['pg/int4@1']['output'] | null;
       readonly source: CodecTypes['pg/text@1']['output'];
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly title: CodecTypes['pg/text@1']['output'];
@@ -655,7 +652,6 @@ export type StorageColumnInputTypes = {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly priority: CodecTypes['pg/int4@1']['input'];
       readonly reasoning: CodecTypes['pg/text@1']['input'] | null;
-      readonly reflectionId: CodecTypes['pg/int4@1']['input'] | null;
       readonly source: CodecTypes['pg/text@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly title: CodecTypes['pg/text@1']['input'];
@@ -852,10 +848,9 @@ export namespace Models {
     reflectionDate: CodecTypes['pg/timestamptz-temporal@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
-    actionSuggestions: public_ActionSuggestion[];
     analysis: public_ReflectionAnalysis | null;
     user: public_User;
-    readonly [RelationKeys]?: 'actionSuggestions' | 'analysis' | 'user';
+    readonly [RelationKeys]?: 'analysis' | 'user';
   };
   export type public_Document = {
     id: CodecTypes['pg/int4@1']['output'];
@@ -916,14 +911,12 @@ export namespace Models {
     reasoning: CodecTypes['pg/text@1']['output'] | null;
     status: CodecTypes['pg/text@1']['output'];
     source: CodecTypes['pg/text@1']['output'];
-    reflectionId: CodecTypes['pg/int4@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
     action: public_Action | null;
     goal: public_Goal | null;
-    reflection: public_Reflection | null;
     user: public_User;
-    readonly [RelationKeys]?: 'action' | 'goal' | 'reflection' | 'user';
+    readonly [RelationKeys]?: 'action' | 'goal' | 'user';
   };
   export type public_ReflectionAnalysis = {
     id: CodecTypes['pg/int4@1']['output'];
@@ -1180,11 +1173,6 @@ type ContractBase = Omit<
                     readonly value: DefaultLiteralValue<'pg/text@1', 'ai'>;
                   };
                 };
-                readonly reflectionId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: true;
-                };
                 readonly createdAt: {
                   readonly nativeType: 'timestamptz';
                   readonly codecId: 'pg/timestamptz-temporal@1';
@@ -1219,12 +1207,6 @@ type ContractBase = Omit<
                   readonly columns: readonly ['status'];
                   readonly unique: false;
                 },
-                {
-                  readonly name: 'actionSuggestion_reflectionId_idx_c6b8fe2f';
-                  readonly prefix: 'actionSuggestion_reflectionId_idx';
-                  readonly columns: readonly ['reflectionId'];
-                  readonly unique: false;
-                },
               ];
               foreignKeys: readonly [
                 {
@@ -1248,18 +1230,6 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'goal';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'actionSuggestion';
-                    readonly columns: readonly ['reflectionId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'reflection';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -2211,10 +2181,6 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly reflectionId: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -2252,18 +2218,6 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['id'];
                 };
               };
-              readonly reflection: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Reflection';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: true;
-                readonly on: {
-                  readonly localFields: readonly ['reflectionId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
               readonly user: {
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
                 readonly cardinality: 'N:1';
@@ -2287,7 +2241,6 @@ type ContractBase = Omit<
                 readonly reasoning: { readonly column: 'reasoning' };
                 readonly status: { readonly column: 'status' };
                 readonly source: { readonly column: 'source' };
-                readonly reflectionId: { readonly column: 'reflectionId' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
@@ -2658,17 +2611,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly actionSuggestions: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'ActionSuggestion';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['reflectionId'];
-                };
-              };
               readonly analysis: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;

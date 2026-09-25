@@ -17,6 +17,7 @@ model User {
   documents    Document[]
   memories     Memory[]
   timeline     TimelineEvent[]
+  reflectionAnalyses ReflectionAnalysis[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @default(now())
@@ -88,6 +89,7 @@ model Action {
 
 model Reflection {
   id          Int             @id @default(autoincrement())
+
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
 
@@ -101,6 +103,9 @@ model Reflection {
   reflectionDate DateTime @default(now())
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now())
+
+  analysis       ReflectionAnalysis?
+  actionSuggestions ActionSuggestion[]
 
   @@index([userId])
   @@index([reflectionDate])
@@ -196,6 +201,8 @@ model ActionSuggestion {
   source      String   @default("ai")
 
   action      Action?
+  reflection      Reflection? @relation(fields: [reflectionId], references: [id], onDelete: SetNull)
+  reflectionId    Int?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now())
@@ -203,4 +210,29 @@ model ActionSuggestion {
   @@index([userId])
   @@index([goalId])
   @@index([status])
+}
+
+model ReflectionAnalysis {
+  id          Int        @id @default(autoincrement())
+
+  reflection  Reflection @relation(fields: [reflectionId], references: [id], onDelete: Cascade)
+  reflectionId Int        @unique
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+
+  summary              String?
+  moodAnalysis         String?
+  productivityAnalysis String?
+
+  highlights            String?
+  challenges            String?
+  learnings             String?
+  goalAlignment         String?
+  recommendedActions    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@index([userId])
 }
