@@ -8,6 +8,10 @@
       "model": "Action",
       "namespace": "public"
     },
+    "actionSuggestion": {
+      "model": "ActionSuggestion",
+      "namespace": "public"
+    },
     "document": {
       "model": "Document",
       "namespace": "public"
@@ -103,6 +107,13 @@
                   "kind": "scalar"
                 }
               },
+              "suggestionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "title": {
                 "nullable": false,
                 "type": {
@@ -139,6 +150,22 @@
                 },
                 "to": {
                   "model": "Goal",
+                  "namespace": "public"
+                }
+              },
+              "suggestion": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "suggestionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "ActionSuggestion",
                   "namespace": "public"
                 }
               },
@@ -185,6 +212,9 @@
                 "status": {
                   "column": "status"
                 },
+                "suggestionId": {
+                  "column": "suggestionId"
+                },
                 "title": {
                   "column": "title"
                 },
@@ -197,6 +227,176 @@
               },
               "namespaceId": "public",
               "table": "action"
+            }
+          },
+          "ActionSuggestion": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "description": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "goalId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "priority": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "reasoning": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "source": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "title": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "action": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "suggestionId"
+                  ]
+                },
+                "to": {
+                  "model": "Action",
+                  "namespace": "public"
+                }
+              },
+              "goal": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "goalId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Goal",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "description": {
+                  "column": "description"
+                },
+                "goalId": {
+                  "column": "goalId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "priority": {
+                  "column": "priority"
+                },
+                "reasoning": {
+                  "column": "reasoning"
+                },
+                "source": {
+                  "column": "source"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "title": {
+                  "column": "title"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "actionSuggestion"
             }
           },
           "Document": {
@@ -426,6 +626,21 @@
                 },
                 "to": {
                   "model": "Action",
+                  "namespace": "public"
+                }
+              },
+              "suggestions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "goalId"
+                  ]
+                },
+                "to": {
+                  "model": "ActionSuggestion",
                   "namespace": "public"
                 }
               },
@@ -965,6 +1180,21 @@
               }
             },
             "relations": {
+              "actionSuggestions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "ActionSuggestion",
+                  "namespace": "public"
+                }
+              },
               "actions": {
                 "cardinality": "1:N",
                 "on": {
@@ -1290,6 +1520,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "suggestionId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
                 "title": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -1344,6 +1579,23 @@
                     "namespaceId": "public",
                     "tableName": "goal"
                   }
+                },
+                {
+                  "onDelete": "setNull",
+                  "source": {
+                    "columns": [
+                      "suggestionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "action"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "actionSuggestion"
+                  }
                 }
               ],
               "indexes": [
@@ -1369,6 +1621,163 @@
                   ],
                   "name": "action_userId_idx_a489d58a",
                   "prefix": "action_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "suggestionId"
+                  ]
+                }
+              ]
+            },
+            "actionSuggestion": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "description": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "goalId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "priority": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "reasoning": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "source": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "ai"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "pending"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "title": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "actionSuggestion"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "user"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "goalId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "actionSuggestion"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "goal"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "goalId"
+                  ],
+                  "name": "actionSuggestion_goalId_idx_8733343e",
+                  "prefix": "actionSuggestion_goalId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status"
+                  ],
+                  "name": "actionSuggestion_status_idx_e98638ab",
+                  "prefix": "actionSuggestion_status_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "actionSuggestion_userId_idx_a489d58a",
+                  "prefix": "actionSuggestion_userId_idx",
                   "unique": false
                 }
               ],
@@ -2189,7 +2598,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "27a0b87d82871b77872d7bcab00e2781025a4838105de0d9ca1df787e67dfacf"
+    "storageHash": "e1e0ed6733a439641be7fb15ed06bc07c88c2c2fc3e2c6315b7836d6fa6dfd1e"
   },
   "capabilities": {
     "postgres": {
