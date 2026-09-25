@@ -8,6 +8,9 @@ import visionRoutes from './routes/vision.routes.js';
 import goalRoutes from './routes/goal.routes.js';
 import actionRoutes from './routes/action.routes.js';
 import actionSuggestionRoutes from './routes/action-suggestion.routes.js';
+import reflectionRoutes from './routes/reflection.routes.js';
+import aiReflectionRoutes from './routes/ai-reflection.routes.js';
+
 const app = express();
 
 app.use(helmet());
@@ -30,5 +33,9 @@ app.use('/api/vision', visionRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/actions', actionRoutes);
 app.use('/api/action-suggestions', actionSuggestionRoutes);
-
+app.use('/api/reflections', reflectionRoutes);
+app.use(
+  '/api/reflections',
+  aiReflectionRoutes
+);
 export default app;
