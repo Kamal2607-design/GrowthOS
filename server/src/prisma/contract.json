@@ -32,6 +32,10 @@
       "model": "Reflection",
       "namespace": "public"
     },
+    "reflectionAnalysis": {
+      "model": "ReflectionAnalysis",
+      "namespace": "public"
+    },
     "timelineEvent": {
       "model": "TimelineEvent",
       "namespace": "public"
@@ -273,6 +277,13 @@
                   "kind": "scalar"
                 }
               },
+              "reflectionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "source": {
                 "nullable": false,
                 "type": {
@@ -342,6 +353,22 @@
                   "namespace": "public"
                 }
               },
+              "reflection": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "reflectionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Reflection",
+                  "namespace": "public"
+                }
+              },
               "user": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -378,6 +405,9 @@
                 },
                 "reasoning": {
                   "column": "reasoning"
+                },
+                "reflectionId": {
+                  "column": "reflectionId"
                 },
                 "source": {
                   "column": "source"
@@ -972,6 +1002,37 @@
               }
             },
             "relations": {
+              "actionSuggestions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "reflectionId"
+                  ]
+                },
+                "to": {
+                  "model": "ActionSuggestion",
+                  "namespace": "public"
+                }
+              },
+              "analysis": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "reflectionId"
+                  ]
+                },
+                "to": {
+                  "model": "ReflectionAnalysis",
+                  "namespace": "public"
+                }
+              },
               "user": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -1027,6 +1088,180 @@
               },
               "namespaceId": "public",
               "table": "reflection"
+            }
+          },
+          "ReflectionAnalysis": {
+            "fields": {
+              "challenges": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "goalAlignment": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "highlights": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "learnings": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "moodAnalysis": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "productivityAnalysis": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "recommendedActions": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "reflectionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "summary": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "reflection": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "reflectionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Reflection",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "challenges": {
+                  "column": "challenges"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "goalAlignment": {
+                  "column": "goalAlignment"
+                },
+                "highlights": {
+                  "column": "highlights"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "learnings": {
+                  "column": "learnings"
+                },
+                "moodAnalysis": {
+                  "column": "moodAnalysis"
+                },
+                "productivityAnalysis": {
+                  "column": "productivityAnalysis"
+                },
+                "recommendedActions": {
+                  "column": "recommendedActions"
+                },
+                "reflectionId": {
+                  "column": "reflectionId"
+                },
+                "summary": {
+                  "column": "summary"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "reflectionAnalysis"
             }
           },
           "TimelineEvent": {
@@ -1267,6 +1502,21 @@
                 },
                 "to": {
                   "model": "OAuthAccount",
+                  "namespace": "public"
+                }
+              },
+              "reflectionAnalyses": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "ReflectionAnalysis",
                   "namespace": "public"
                 }
               },
@@ -1681,6 +1931,11 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "reflectionId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
                 "source": {
                   "codecId": "pg/text@1",
                   "default": {
@@ -1753,6 +2008,23 @@
                     "namespaceId": "public",
                     "tableName": "goal"
                   }
+                },
+                {
+                  "onDelete": "setNull",
+                  "source": {
+                    "columns": [
+                      "reflectionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "actionSuggestion"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "reflection"
+                  }
                 }
               ],
               "indexes": [
@@ -1762,6 +2034,14 @@
                   ],
                   "name": "actionSuggestion_goalId_idx_8733343e",
                   "prefix": "actionSuggestion_goalId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "reflectionId"
+                  ],
+                  "name": "actionSuggestion_reflectionId_idx_c6b8fe2f",
+                  "prefix": "actionSuggestion_reflectionId_idx",
                   "unique": false
                 },
                 {
@@ -2332,6 +2612,145 @@
               },
               "uniques": []
             },
+            "reflectionAnalysis": {
+              "columns": {
+                "challenges": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "goalAlignment": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "highlights": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "learnings": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "moodAnalysis": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "productivityAnalysis": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "recommendedActions": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "reflectionId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "summary": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "reflectionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "reflectionAnalysis"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "reflection"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "reflectionAnalysis"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "user"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "reflectionAnalysis_userId_idx_a489d58a",
+                  "prefix": "reflectionAnalysis_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "reflectionId"
+                  ]
+                }
+              ]
+            },
             "timelineEvent": {
               "columns": {
                 "createdAt": {
@@ -2598,7 +3017,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "e1e0ed6733a439641be7fb15ed06bc07c88c2c2fc3e2c6315b7836d6fa6dfd1e"
+    "storageHash": "b2b410abcba1e19c6ecf86367ed70c03db3464b2222043595a083541ff109f23"
   },
   "capabilities": {
     "postgres": {
