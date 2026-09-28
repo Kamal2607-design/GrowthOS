@@ -6,6 +6,7 @@ import {
   getCurrentUserAction,
   updateCurrentUserAction,
   deleteCurrentUserAction,
+  updateActionStatusController,
 } from '../controllers/action.controller.js';
 
 import { authenticate } from '../middleware/auth.middleware.js';
@@ -23,5 +24,11 @@ router.get('/:id', getCurrentUserAction);
 router.patch('/:id', updateCurrentUserAction);
 
 router.delete('/:id', deleteCurrentUserAction);
+
+router.patch(
+  '/:id/status',
+  authenticate,
+  updateActionStatusController
+);
 
 export default router;

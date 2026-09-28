@@ -3,112 +3,142 @@ export function buildReflectionAnalysisPrompt({
   vision,
   goals,
   actions,
+  dailyProgress,
 }) {
-  const visionContext = vision
-    ? `
-VISION:
-Statement: ${vision.statement || 'N/A'}
-Values: ${vision.values || 'N/A'}
-Identity: ${vision.identity || 'N/A'}
-Future Self: ${vision.futureSelf || 'N/A'}
-`
-    : `
-VISION:
-No vision has been defined yet.
-`;
-
-  const goalsContext =
-    goals && goals.length > 0
-      ? goals
-          .map(
-            (goal) => `
-Goal:
-ID: ${goal.id}
-Title: ${goal.title}
-Description: ${goal.description || 'N/A'}
-Status: ${goal.status}
-Priority: ${goal.priority}
-Target Date: ${goal.targetDate || 'N/A'}
-`
-          )
-          .join('\n')
-      : 'No goals available.';
-
-  const actionsContext =
-    actions && actions.length > 0
-      ? actions
-          .map(
-            (action) => `
-Action:
-Title: ${action.title}
-Description: ${action.description || 'N/A'}
-Status: ${action.status}
-Priority: ${action.priority}
-`
-          )
-          .join('\n')
-      : 'No recent actions available.';
-
   return `
-You are the reflection analysis engine for GrowthOS.
+You are an AI personal growth assistant
+analyzing a user's daily reflection.
 
-Analyze the user's daily reflection in the context of their
-vision, goals, and actions.
+Your job is to understand what the user
+actually accomplished today, what they
+struggled with, what they learned, and
+how today's activity relates to their
+long-term goals.
 
-Do NOT create or modify database records.
-Do NOT assume facts that are not present in the provided data.
-Do NOT give generic motivational advice.
-
-Identify:
-1. What happened today.
-2. Productivity and mood patterns.
-3. Important highlights.
-4. Challenges.
-5. Learnings.
-6. How today's activity aligns with the user's goals.
-7. A small number of practical recommended actions.
-8. An Appreciation of the user's efforts and progress.
-
-The recommended actions are suggestions only.
-The user must explicitly accept a suggestion before it becomes
-a real GrowthOS Action.
-
-${visionContext}
-
-USER REFLECTION:
+========================
+USER REFLECTION
+========================
 
 Content:
 ${reflection.content}
 
 Mood:
-${reflection.mood || 'N/A'}
+${reflection.mood || 'Not provided'}
 
 Productivity:
-${reflection.productivity ?? 'N/A'}
+${reflection.productivity ?? 'Not provided'}
 
 Highlights:
-${reflection.highlights || 'N/A'}
+${reflection.highlights || 'Not provided'}
 
 Challenges:
-${reflection.challenges || 'N/A'}
+${reflection.challenges || 'Not provided'}
 
 Learnings:
-${reflection.learnings || 'N/A'}
+${reflection.learnings || 'Not provided'}
 
-REFLECTION DATE:
-${reflection.reflectionDate}
 
-USER GOALS:
+========================
+VISION
+========================
 
-${goalsContext}
+Statement:
+${vision?.statement || 'Not provided'}
 
-CURRENT ACTIONS:
+Values:
+${vision?.values || 'Not provided'}
 
-${actionsContext}
+Identity:
+${vision?.identity || 'Not provided'}
+
+Future Self:
+${vision?.futureSelf || 'Not provided'}
+
+
+========================
+GOALS
+========================
+
+${JSON.stringify(goals, null, 2)}
+
+
+========================
+TODAY'S ACTION PROGRESS
+========================
+
+Total actions:
+${dailyProgress.total}
+
+Completed actions:
+${JSON.stringify(
+  dailyProgress.completed,
+  null,
+  2
+)}
+
+In-progress actions:
+${JSON.stringify(
+  dailyProgress.inProgress,
+  null,
+  2
+)}
+
+Pending actions:
+${JSON.stringify(
+  dailyProgress.pending,
+  null,
+  2
+)}
+
+Cancelled actions:
+${JSON.stringify(
+  dailyProgress.cancelled,
+  null,
+  2
+)}
+
+
+========================
+ANALYSIS REQUIREMENTS
+========================
+
+Analyze the reflection together with
+the user's actual action progress.
+
+You must:
+
+1. Summarize the user's day.
+
+2. Analyze mood.
+
+3. Analyze productivity.
+
+4. Identify achievements.
+
+5. Identify challenges.
+
+6. Identify learnings.
+
+7. Determine how today's work aligns
+   with the user's goals.
+
+8. Compare the user's reflection claims
+   with their actual action progress.
+
+9. Identify unfinished or pending work.
+
+10. Recommend practical next actions.
+
+11. Do not claim an action was completed
+    unless the action status is completed.
+
+12. Do not invent achievements that are
+    not supported by the reflection or
+    action data.
 
 Return ONLY valid JSON.
 
-Use exactly this structure:
+Expected format:
 
 {
   "summary": "string",
@@ -124,6 +154,13 @@ Use exactly this structure:
       "reason": "string"
     }
   ],
+  "progressAnalysis": {
+    "completedCount": 0,
+    "pendingCount": 0,
+    "inProgressCount": 0,
+    "cancelledCount": 0,
+    "summary": "string"
+  },
   "recommendedActions": [
     {
       "title": "string",
