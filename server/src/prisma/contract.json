@@ -1148,6 +1148,13 @@
                   "kind": "scalar"
                 }
               },
+              "progressAnalysis": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "recommendedActions": {
                 "nullable": true,
                 "type": {
@@ -1243,6 +1250,9 @@
                 },
                 "productivityAnalysis": {
                   "column": "productivityAnalysis"
+                },
+                "progressAnalysis": {
+                  "column": "progressAnalysis"
                 },
                 "recommendedActions": {
                   "column": "recommendedActions"
@@ -2662,6 +2672,11 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "progressAnalysis": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "recommendedActions": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -3017,7 +3032,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "b2b410abcba1e19c6ecf86367ed70c03db3464b2222043595a083541ff109f23"
+    "storageHash": "39cfaf59bdb798546c0a6dda21e6ddf4b7c54d301d2a6881a2b9391bb6fbbad8"
   },
   "capabilities": {
     "postgres": {

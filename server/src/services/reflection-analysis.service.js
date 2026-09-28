@@ -8,6 +8,55 @@ import {
   createActionSuggestion,
 } from './action-suggestion.service.js';
 
+import {
+  getDayRange,buildDailyProgress
+} from '../helpers/dailyprogress.helper.js';
+
+async function getDailyActions(
+  userId,
+  reflectionDate
+) {
+  const {
+    start,
+    end,
+  } = getDayRange(reflectionDate);
+
+  const actions =
+    await db.orm.public.Action
+      .where({
+        userId,
+      })
+      .all();
+
+  return actions.filter((action) => {
+    const createdAt =
+    action.createdAt
+        ? new Date(
+            action.createdAt.epochMilliseconds
+        )
+        : null;
+
+    const completedAt =
+    action.completedAt
+        ? new Date(
+            action.completedAt.epochMilliseconds
+        )
+        : null;
+    const createdToday =
+      createdAt >= start &&
+      createdAt < end;
+
+    const completedToday =
+      completedAt &&
+      completedAt >= start &&
+      completedAt < end;
+
+    return (
+      createdToday ||
+      completedToday
+    );
+  });
+}
 
 async function getReflectionForUser(
   userId,
@@ -42,13 +91,36 @@ async function getUserGoals(userId) {
     .all();
 }
 
+async function expirePendingReflectionSuggestions(
+  userId,
+  reflectionId
+) {
+  const existingSuggestions =
+    await db.orm.public.ActionSuggestion
+      .where({
+        userId,
+        reflectionId,
+        source: 'ai',
+        status: 'pending',
+      })
+      .all();
 
-async function getUserActions(userId) {
-  return await db.orm.public.Action
-    .where({
-      userId,
-    })
-    .all();
+  console.log(
+    `Found ${existingSuggestions.length} pending AI suggestions for reflection ${reflectionId}`
+  );
+
+  for (const suggestion of existingSuggestions) {
+    await db.orm.public.ActionSuggestion
+      .where({
+        id: suggestion.id,
+        userId,
+      })
+      .update({
+        status: 'expired',
+      });
+  }
+
+  return existingSuggestions.length;
 }
 
 
@@ -63,6 +135,24 @@ async function createReflectionSuggestions(
   ) {
     return [];
   }
+
+  // ---------------------------------------------
+  // 1. Expire previous pending AI suggestions
+  // ---------------------------------------------
+
+  const expiredCount =
+    await expirePendingReflectionSuggestions(
+      userId,
+      reflectionId
+    );
+
+  console.log(
+    `Expired ${expiredCount} previous AI suggestions for reflection ${reflectionId}`
+  );
+
+  // ---------------------------------------------
+  // 2. Create new suggestions
+  // ---------------------------------------------
 
   const createdSuggestions = [];
 
@@ -84,7 +174,8 @@ async function createReflectionSuggestions(
           goalId: null,
           reflectionId,
           priority: 0,
-          reasoning: recommendation.reason,
+          reasoning:
+            recommendation.reason,
           source: 'ai',
         }
       );
@@ -127,7 +218,13 @@ export async function analyzeReflectionAndCreateSuggestions(
     await getUserGoals(userId);
 
   const actions =
-    await getUserActions(userId);
+    await getDailyActions(
+    userId,
+    reflection.reflectionDate
+  );
+
+  const dailyProgress =
+     buildDailyProgress(actions);
 
   console.log(
     `Found ${goals.length} goals`
@@ -135,6 +232,10 @@ export async function analyzeReflectionAndCreateSuggestions(
 
   console.log(
     `Found ${actions.length} actions`
+  );
+
+  console.log(
+    `Found ${dailyProgress.total} actions`
   );
 
 
@@ -152,6 +253,7 @@ export async function analyzeReflectionAndCreateSuggestions(
       vision,
       goals,
       actions,
+      dailyProgress,
     });
 
   console.log(
@@ -206,6 +308,13 @@ export async function analyzeReflectionAndCreateSuggestions(
       Array.isArray(analysis.goalAlignment)
         ? JSON.stringify(analysis.goalAlignment)
         : analysis.goalAlignment || null,
+
+    progressAnalysis:
+      analysis.progressAnalysis
+        ? JSON.stringify(
+            analysis.progressAnalysis
+            )
+        : null,
 
     recommendedActions:
       Array.isArray(analysis.recommendedActions)

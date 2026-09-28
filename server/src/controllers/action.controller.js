@@ -4,6 +4,7 @@ import {
   getActionById,
   updateAction,
   deleteAction,
+  updateActionStatus,
 } from '../services/action.service.js';
 
 export async function createCurrentUserAction(req, res) {
@@ -345,6 +346,70 @@ export async function deleteCurrentUserAction(req, res) {
     return res.status(500).json({
       success: false,
       message: 'Failed to delete action',
+    });
+  }
+}
+
+export async function updateActionStatusController(
+  req,
+  res
+) {
+  try {
+    const userId = req.user.id;
+
+    const actionId =
+      Number(req.params.id);
+
+    const { status } = req.body;
+
+    if (!Number.isInteger(actionId)) {
+      return res.status(400).json({
+        error: 'Invalid action ID',
+      });
+    }
+
+    if (!status) {
+      return res.status(400).json({
+        error: 'Status is required',
+      });
+    }
+
+    const action =
+      await updateActionStatus(
+        userId,
+        actionId,
+        status
+      );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Action status updated successfully',
+      action,
+    });
+  } catch (error) {
+    console.error(
+      'Update action status error:',
+      error
+    );
+
+    if (error.message === 'ACTION_NOT_FOUND') {
+      return res.status(404).json({
+        error: 'Action not found',
+      });
+    }
+
+    if (
+      error.message ===
+      'INVALID_ACTION_STATUS'
+    ) {
+      return res.status(400).json({
+        error:
+          'Invalid action status. Allowed values: pending, in_progress, completed, cancelled',
+      });
+    }
+
+    return res.status(500).json({
+      error: 'Failed to update action status',
     });
   }
 }

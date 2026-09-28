@@ -308,3 +308,43 @@ export async function deleteAction(
 
   return deletedAction;
 }
+
+export async function updateActionStatus(
+  userId,
+  actionId,
+  status
+) {
+  if (!VALID_STATUSES.includes(status)) {
+    throw new Error('INVALID_ACTION_STATUS');
+  }
+
+  const action =
+    await db.orm.public.Action.first({
+      id: actionId,
+      userId,
+    });
+
+  if (!action) {
+    throw new Error('ACTION_NOT_FOUND');
+  }
+
+  const updateData = {
+    status,
+  };
+
+  if (status === 'completed') {
+    updateData.completedAt = new Date();
+  } else {
+    updateData.completedAt = null;
+  }
+
+  const updatedAction =
+    await db.orm.public.Action
+      .where({
+        id: actionId,
+        userId,
+      })
+      .update(updateData);
+
+  return updatedAction;
+}

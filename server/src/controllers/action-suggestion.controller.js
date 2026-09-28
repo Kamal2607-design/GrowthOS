@@ -69,6 +69,13 @@ export async function createCurrentUserActionSuggestion(
       });
     }
 
+    if (error.message === 'REFLECTION_NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        message: 'Reflection not found',
+      });
+    }
+    
     if (error.message === 'GOAL_NOT_FOUND') {
       return res.status(404).json({
         success: false,
@@ -137,6 +144,13 @@ export async function getCurrentUserActionSuggestions(
       return res.status(400).json({
         success: false,
         message: 'Invalid goal id',
+      });
+    }
+
+    if (error.message === 'INVALID_REFLECTION_ID') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid reflection id',
       });
     }
 

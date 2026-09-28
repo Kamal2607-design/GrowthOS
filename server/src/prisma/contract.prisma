@@ -229,6 +229,7 @@ model ReflectionAnalysis {
   challenges            String?
   learnings             String?
   goalAlignment         String?
+  progressAnalysis      String?
   recommendedActions    String?
 
   createdAt DateTime @default(now())
