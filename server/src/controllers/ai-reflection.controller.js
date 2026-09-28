@@ -1,18 +1,12 @@
-import { db } from '../prisma/db.ts';
-
 import {
-  analyzeReflection,
-} from '../services/ai/reflection-analysis.service.js';
+  analyzeReflectionAndCreateSuggestions,
+} from '../services/reflection-analysis.service.js';
 
-export async function analyzeUserReflection(
-  req,
-  res
-) {
+export async function analyzeUserReflection(req, res) {
   try {
     const userId = req.user.id;
 
-    const reflectionId =
-      Number(req.params.id);
+    const reflectionId = Number(req.params.id);
 
     if (!Number.isInteger(reflectionId)) {
       return res.status(400).json({
@@ -24,119 +18,33 @@ export async function analyzeUserReflection(
       `Analyzing reflection ${reflectionId} for user ${userId}`
     );
 
-    // ---------------------------------------------
-    // 1. Get reflection
-    // ---------------------------------------------
-
-    const reflection =
-      await db.orm.public.Reflection.first({
-        id: reflectionId,
+    const result =
+      await analyzeReflectionAndCreateSuggestions(
         userId,
-      });
-
-    if (!reflection) {
-      return res.status(404).json({
-        error: 'Reflection not found',
-      });
-    }
-
-    console.log(
-      'Reflection found:',
-      JSON.stringify(
-        reflection,
-        null,
-        2
-      )
-    );
-
-    // ---------------------------------------------
-    // 2. Get user's vision
-    // ---------------------------------------------
-
-    const vision =
-      await db.orm.public.Vision.first({
-        userId,
-      });
-
-    console.log(
-      'Vision found:',
-      JSON.stringify(
-        vision,
-        null,
-        2
-      )
-    );
-
-    // ---------------------------------------------
-    // 3. Get user's goals
-    // ---------------------------------------------
-
-    const goals =
-      await db.orm.public.Goal
-        .where({
-          userId,
-        })
-        .all();
-
-    console.log(
-      `Found ${goals.length} goals`
-    );
-
-    // ---------------------------------------------
-    // 4. Get user's actions
-    // ---------------------------------------------
-
-    const actions =
-      await db.orm.public.Action
-        .where({
-          userId,
-        })
-        .all();
-
-    console.log(
-      `Found ${actions.length} actions`
-    );
-
-    // ---------------------------------------------
-    // 5. Analyze reflection with Qwen
-    // ---------------------------------------------
-
-    const analysis =
-      await analyzeReflection({
-        reflection,
-        vision,
-        goals,
-        actions,
-      });
-
-    console.log(
-      'Reflection AI analysis:',
-      JSON.stringify(
-        analysis,
-        null,
-        2
-      )
-    );
-
-    // ---------------------------------------------
-    // 6. Return analysis
-    // ---------------------------------------------
+        reflectionId
+      );
 
     return res.status(200).json({
       success: true,
-      message:
-        'Reflection analyzed successfully',
-      analysis,
+      message: 'Reflection analyzed successfully',
+      analysis: result.analysis,
+      suggestions: result.suggestions,
     });
+
   } catch (error) {
     console.error(
       'Analyze reflection error:',
       error
     );
 
+    if (error.message === 'REFLECTION_NOT_FOUND') {
+      return res.status(404).json({
+        error: 'Reflection not found',
+      });
+    }
+
     return res.status(500).json({
-      error:
-        'Failed to analyze reflection',
+      error: 'Failed to analyze reflection',
     });
   }
 }

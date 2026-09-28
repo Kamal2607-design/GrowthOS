@@ -99,7 +99,7 @@ export async function getCurrentUserActionSuggestions(
   try {
     const userId = req.user.id;
 
-    const { status, goalId } = req.query;
+    const { status, goalId, reflectionId } = req.query;
 
     const suggestions =
       await getActionSuggestions(userId, {
@@ -108,6 +108,10 @@ export async function getCurrentUserActionSuggestions(
           goalId === undefined
             ? undefined
             : Number(goalId),
+                  reflectionId:
+        reflectionId !== undefined
+          ? Number(reflectionId)
+          : undefined,
       });
 
     return res.status(200).json({
