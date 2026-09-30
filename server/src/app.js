@@ -10,6 +10,7 @@ import actionRoutes from './routes/action.routes.js';
 import actionSuggestionRoutes from './routes/action-suggestion.routes.js';
 import reflectionRoutes from './routes/reflection.routes.js';
 import aiReflectionRoutes from './routes/ai-reflection.routes.js';
+import documentRouter from './routes/document.route.js';
 
 const app = express();
 
@@ -38,4 +39,5 @@ app.use(
   '/api/reflections',
   aiReflectionRoutes
 );
+app.use('/api/documents', documentRouter);
 export default app;
