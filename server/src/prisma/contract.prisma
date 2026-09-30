@@ -121,6 +121,7 @@ model Document {
   mimeType       String
   fileSize       Int
   processingStatus String        @default("pending")
+  extractionMethod String?
 
   extractedText  String?
   summary        String?

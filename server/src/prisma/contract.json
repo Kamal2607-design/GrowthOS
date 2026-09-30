@@ -445,6 +445,13 @@
                   "kind": "scalar"
                 }
               },
+              "extractionMethod": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "fileName": {
                 "nullable": false,
                 "type": {
@@ -541,6 +548,9 @@
                 },
                 "extractedText": {
                   "column": "extractedText"
+                },
+                "extractionMethod": {
+                  "column": "extractionMethod"
                 },
                 "fileName": {
                   "column": "fileName"
@@ -2094,6 +2104,11 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "extractionMethod": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "fileName": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -3032,7 +3047,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "39cfaf59bdb798546c0a6dda21e6ddf4b7c54d301d2a6881a2b9391bb6fbbad8"
+    "storageHash": "2f48f8f0ff75be76449acef955aa7b6024c0438cbb51bf88873c8eb2fa0481fc"
   },
   "capabilities": {
     "postgres": {
