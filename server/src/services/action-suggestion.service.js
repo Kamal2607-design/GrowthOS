@@ -27,19 +27,44 @@ async function verifyGoalOwnership(userId, goalId) {
   }
 }
 
+async function verifyReflectionOwnership(
+  userId,
+  reflectionId
+) {
+  if (
+    reflectionId === null ||
+    reflectionId === undefined
+  ) {
+    return;
+  }
+
+  const reflection =
+    await db.orm.public.Reflection.first({
+      id: reflectionId,
+      userId,
+    });
+
+  if (!reflection) {
+    throw new Error('REFLECTION_NOT_FOUND');
+  }
+}
+
 export async function createActionSuggestion(
   userId,
   {
     title,
     description,
     goalId,
+    reflectionId,
     priority,
     reasoning,
     source,
   }
 ) {
   if (!title || !title.trim()) {
-    throw new Error('SUGGESTION_TITLE_REQUIRED');
+    throw new Error(
+      'SUGGESTION_TITLE_REQUIRED'
+    );
   }
 
   if (
@@ -50,23 +75,58 @@ export async function createActionSuggestion(
     throw new Error('INVALID_GOAL_ID');
   }
 
-  const suggestionSource = source || 'ai';
-
-  if (!VALID_SOURCES.includes(suggestionSource)) {
-    throw new Error('INVALID_SUGGESTION_SOURCE');
+  if (
+    reflectionId !== undefined &&
+    reflectionId !== null &&
+    !Number.isInteger(reflectionId)
+  ) {
+    throw new Error(
+      'INVALID_REFLECTION_ID'
+    );
   }
 
-  await verifyGoalOwnership(userId, goalId);
+  const suggestionSource =
+    source || 'ai';
+
+  if (!VALID_SOURCES.includes(suggestionSource)) {
+    throw new Error(
+      'INVALID_SUGGESTION_SOURCE'
+    );
+  }
+
+  await verifyGoalOwnership(
+    userId,
+    goalId
+  );
+
+  await verifyReflectionOwnership(
+    userId,
+    reflectionId
+  );
 
   const suggestion =
     await db.orm.public.ActionSuggestion.create({
       userId,
-      goalId: goalId ?? null,
+
+      goalId:
+        goalId ?? null,
+
+      reflectionId:
+        reflectionId ?? null,
+
       title: title.trim(),
-      description: description?.trim() || null,
-      priority: priority ?? 0,
-      reasoning: reasoning?.trim() || null,
+
+      description:
+        description?.trim() || null,
+
+      priority:
+        priority ?? 0,
+
+      reasoning:
+        reasoning?.trim() || null,
+
       status: 'pending',
+
       source: suggestionSource,
     });
 
@@ -75,7 +135,11 @@ export async function createActionSuggestion(
 
 export async function getActionSuggestions(
   userId,
-  { status, goalId } = {}
+  {
+    status,
+    goalId,
+    reflectionId,
+  } = {}
 ) {
   const filter = {
     userId,
@@ -96,6 +160,14 @@ export async function getActionSuggestions(
 
     filter.goalId = goalId;
   }
+
+  if (reflectionId !== undefined) {
+  if (!Number.isInteger(reflectionId)) {
+    throw new Error('INVALID_REFLECTION_ID');
+  }
+
+  filter.reflectionId = reflectionId;
+}
 
   const suggestions =
     await db.orm.public.ActionSuggestion

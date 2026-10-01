@@ -17,6 +17,8 @@ model User {
   documents    Document[]
   memories     Memory[]
   timeline     TimelineEvent[]
+  reflectionAnalyses ReflectionAnalysis[]
+  documentCandidates DocumentCandidate[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @default(now())
@@ -88,6 +90,7 @@ model Action {
 
 model Reflection {
   id          Int             @id @default(autoincrement())
+
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
 
@@ -101,6 +104,9 @@ model Reflection {
   reflectionDate DateTime @default(now())
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now())
+
+  analysis       ReflectionAnalysis?
+  actionSuggestions ActionSuggestion[]
 
   @@index([userId])
   @@index([reflectionDate])
@@ -116,10 +122,12 @@ model Document {
   mimeType       String
   fileSize       Int
   processingStatus String        @default("pending")
+  extractionMethod String?
 
   extractedText  String?
   summary        String?
   structuredData String?
+  candidates DocumentCandidate[]
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now())
@@ -196,6 +204,8 @@ model ActionSuggestion {
   source      String   @default("ai")
 
   action      Action?
+  reflection      Reflection? @relation(fields: [reflectionId], references: [id], onDelete: SetNull)
+  reflectionId    Int?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now())
@@ -203,4 +213,67 @@ model ActionSuggestion {
   @@index([userId])
   @@index([goalId])
   @@index([status])
+}
+
+model ReflectionAnalysis {
+  id          Int        @id @default(autoincrement())
+
+  reflection  Reflection @relation(fields: [reflectionId], references: [id], onDelete: Cascade)
+  reflectionId Int        @unique
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+
+  summary              String?
+  moodAnalysis         String?
+  productivityAnalysis String?
+
+  highlights            String?
+  challenges            String?
+  learnings             String?
+  goalAlignment         String?
+  progressAnalysis      String?
+  recommendedActions    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model DocumentCandidate {
+  id Int @id @default(autoincrement())
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+  userId Int
+
+  document Document @relation(
+    fields: [documentId],
+    references: [id],
+    onDelete: Cascade
+  )
+  documentId Int
+
+  type String
+  sourceIndex Int
+
+  title String?
+  content String?
+  reason String?
+  importance Int?
+
+  status String @default("pending")
+  reviewedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@unique([documentId, type, sourceIndex])
+  @@index([userId, status])
+  @@index([documentId])
+  @@index([type])
 }

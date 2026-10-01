@@ -2,13 +2,14 @@ import { generateWithQwen } from './qwen.service.js';
 
 import {
   buildReflectionAnalysisPrompt,
-} from './reflection-prompt.service.js';
+} from './reflection-prompt.service.js'; 
 
 export async function analyzeReflection({
   reflection,
   vision,
   goals,
   actions,
+  dailyProgress,
 }) {
   const prompt =
     buildReflectionAnalysisPrompt({
@@ -16,6 +17,7 @@ export async function analyzeReflection({
       vision,
       goals,
       actions,
+      dailyProgress,
     });
 
   console.log(
@@ -96,28 +98,73 @@ export async function analyzeReflection({
       'Qwen reflection analysis recommendedActions must be an array.'
     );
   }
+  if (
+    !parsed.progressAnalysis ||
+    typeof parsed.progressAnalysis !== 'object'
+  ) {
+    throw new Error(
+      'Qwen reflection analysis progressAnalysis must be an object.'
+    );
+  }
 
-  return {
-    summary: parsed.summary,
-    moodAnalysis: parsed.moodAnalysis,
-    productivityAnalysis:
-      parsed.productivityAnalysis,
+  if (
+    typeof parsed.progressAnalysis.completedCount !== 'number' ||
+    typeof parsed.progressAnalysis.pendingCount !== 'number' ||
+    typeof parsed.progressAnalysis.inProgressCount !== 'number' ||
+    typeof parsed.progressAnalysis.cancelledCount !== 'number' ||
+    typeof parsed.progressAnalysis.summary !== 'string'
+  ) {
+    throw new Error(
+      'Qwen reflection analysis progressAnalysis has an invalid structure.'
+    );
+  }
 
-    highlights: parsed.highlights,
-    challenges: parsed.challenges,
-    learnings: parsed.learnings,
+return {
+  summary: parsed.summary,
 
-    goalAlignment:
-      parsed.goalAlignment.map((item) => ({
-        goal: item.goal,
-        alignment: item.alignment,
-        reason: item.reason,
-      })),
+  moodAnalysis:
+    parsed.moodAnalysis,
 
-    recommendedActions:
-      parsed.recommendedActions.map((action) => ({
-        title: action.title,
-        reason: action.reason,
-      })),
-  };
+  productivityAnalysis:
+    parsed.productivityAnalysis,
+
+  highlights:
+    parsed.highlights,
+
+  challenges:
+    parsed.challenges,
+
+  learnings:
+    parsed.learnings,
+
+  goalAlignment:
+    parsed.goalAlignment.map((item) => ({
+      goal: item.goal,
+      alignment: item.alignment,
+      reason: item.reason,
+    })),
+
+  progressAnalysis: {
+    completedCount:
+      parsed.progressAnalysis.completedCount,
+
+    pendingCount:
+      parsed.progressAnalysis.pendingCount,
+
+    inProgressCount:
+      parsed.progressAnalysis.inProgressCount,
+
+    cancelledCount:
+      parsed.progressAnalysis.cancelledCount,
+
+    summary:
+      parsed.progressAnalysis.summary,
+  },
+
+  recommendedActions:
+    parsed.recommendedActions.map((action) => ({
+      title: action.title,
+      reason: action.reason,
+    })),
+};
 }

@@ -69,6 +69,13 @@ export async function createCurrentUserActionSuggestion(
       });
     }
 
+    if (error.message === 'REFLECTION_NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        message: 'Reflection not found',
+      });
+    }
+    
     if (error.message === 'GOAL_NOT_FOUND') {
       return res.status(404).json({
         success: false,
@@ -99,7 +106,7 @@ export async function getCurrentUserActionSuggestions(
   try {
     const userId = req.user.id;
 
-    const { status, goalId } = req.query;
+    const { status, goalId, reflectionId } = req.query;
 
     const suggestions =
       await getActionSuggestions(userId, {
@@ -108,6 +115,10 @@ export async function getCurrentUserActionSuggestions(
           goalId === undefined
             ? undefined
             : Number(goalId),
+                  reflectionId:
+        reflectionId !== undefined
+          ? Number(reflectionId)
+          : undefined,
       });
 
     return res.status(200).json({
@@ -133,6 +144,13 @@ export async function getCurrentUserActionSuggestions(
       return res.status(400).json({
         success: false,
         message: 'Invalid goal id',
+      });
+    }
+
+    if (error.message === 'INVALID_REFLECTION_ID') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid reflection id',
       });
     }
 
