@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.document.extractionMethod",
+    "label": "Add column \"extractionMethod\" to \"document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "extractionMethod",
+        "table": "document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"extractionMethod\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "document",
+          "extractionMethod"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"extractionMethod\"",
+        "sql": "ALTER TABLE \"public\".\"document\" ADD COLUMN \"extractionMethod\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"extractionMethod\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "document",
+          "extractionMethod"
+        ]
+      }
+    ]
+  }
+]

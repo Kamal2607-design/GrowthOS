@@ -18,6 +18,7 @@ model User {
   memories     Memory[]
   timeline     TimelineEvent[]
   reflectionAnalyses ReflectionAnalysis[]
+  documentCandidates DocumentCandidate[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @default(now())
@@ -126,6 +127,7 @@ model Document {
   extractedText  String?
   summary        String?
   structuredData String?
+  candidates DocumentCandidate[]
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now())
@@ -237,4 +239,41 @@ model ReflectionAnalysis {
   updatedAt DateTime @default(now())
 
   @@index([userId])
+}
+
+model DocumentCandidate {
+  id Int @id @default(autoincrement())
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+  userId Int
+
+  document Document @relation(
+    fields: [documentId],
+    references: [id],
+    onDelete: Cascade
+  )
+  documentId Int
+
+  type String
+  sourceIndex Int
+
+  title String?
+  content String?
+  reason String?
+  importance Int?
+
+  status String @default("pending")
+  reviewedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@unique([documentId, type, sourceIndex])
+  @@index([userId, status])
+  @@index([documentId])
+  @@index([type])
 }
