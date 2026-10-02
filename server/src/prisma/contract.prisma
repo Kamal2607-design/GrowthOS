@@ -44,6 +44,14 @@ model Goal {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
 
+  sourceCandidate DocumentCandidate? @relation(
+    "GoalSourceCandidate",
+    fields: [sourceCandidateId],
+    references: [id],
+    onDelete: SetNull
+  )
+  sourceCandidateId Int? @unique
+
   title       String
   description String?
   status      String   @default("active")
@@ -71,6 +79,14 @@ model Action {
 
   suggestion  ActionSuggestion? @relation(fields: [suggestionId], references: [id], onDelete: SetNull)
   suggestionId Int? @unique
+
+  sourceCandidate DocumentCandidate? @relation(
+    "ActionSourceCandidate",
+    fields: [sourceCandidateId],
+    references: [id],
+    onDelete: SetNull
+  )
+  sourceCandidateId Int? @unique
 
   title       String
   description String?
@@ -140,6 +156,14 @@ model Memory {
   id          Int             @id @default(autoincrement())
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
+
+  sourceCandidate DocumentCandidate? @relation(
+    "MemorySourceCandidate",
+    fields: [sourceCandidateId],
+    references: [id],
+    onDelete: SetNull
+  )
+  sourceCandidateId Int? @unique
 
   type        String
   content     String
@@ -268,6 +292,10 @@ model DocumentCandidate {
 
   status String @default("pending")
   reviewedAt DateTime?
+
+  memory Memory? @relation("MemorySourceCandidate")
+  goal Goal? @relation("GoalSourceCandidate")
+  action Action? @relation("ActionSourceCandidate")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())

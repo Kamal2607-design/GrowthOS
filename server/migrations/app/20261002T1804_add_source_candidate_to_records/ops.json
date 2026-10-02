@@ -1,0 +1,380 @@
+[
+  {
+    "id": "column.public.action.sourceCandidateId",
+    "label": "Add column \"sourceCandidateId\" to \"action\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "sourceCandidateId",
+        "table": "action"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"sourceCandidateId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "action",
+          "sourceCandidateId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"sourceCandidateId\"",
+        "sql": "ALTER TABLE \"public\".\"action\" ADD COLUMN \"sourceCandidateId\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"sourceCandidateId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "action",
+          "sourceCandidateId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.goal.sourceCandidateId",
+    "label": "Add column \"sourceCandidateId\" to \"goal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "sourceCandidateId",
+        "table": "goal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"sourceCandidateId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "goal",
+          "sourceCandidateId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"sourceCandidateId\"",
+        "sql": "ALTER TABLE \"public\".\"goal\" ADD COLUMN \"sourceCandidateId\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"sourceCandidateId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "goal",
+          "sourceCandidateId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.memory.sourceCandidateId",
+    "label": "Add column \"sourceCandidateId\" to \"memory\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "sourceCandidateId",
+        "table": "memory"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"sourceCandidateId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "memory",
+          "sourceCandidateId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"sourceCandidateId\"",
+        "sql": "ALTER TABLE \"public\".\"memory\" ADD COLUMN \"sourceCandidateId\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"sourceCandidateId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "memory",
+          "sourceCandidateId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.action.action_sourceCandidateId_key",
+    "label": "Add unique constraint on \"action\" (sourceCandidateId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "action_sourceCandidateId_key",
+        "table": "action"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"action_sourceCandidateId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "action_sourceCandidateId_key",
+          "public",
+          "\"public\".\"action\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"action_sourceCandidateId_key\"",
+        "sql": "ALTER TABLE \"public\".\"action\" ADD CONSTRAINT \"action_sourceCandidateId_key\" UNIQUE (\"sourceCandidateId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"action_sourceCandidateId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "action_sourceCandidateId_key",
+          "public",
+          "\"public\".\"action\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.goal.goal_sourceCandidateId_key",
+    "label": "Add unique constraint on \"goal\" (sourceCandidateId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "goal_sourceCandidateId_key",
+        "table": "goal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"goal_sourceCandidateId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "goal_sourceCandidateId_key",
+          "public",
+          "\"public\".\"goal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"goal_sourceCandidateId_key\"",
+        "sql": "ALTER TABLE \"public\".\"goal\" ADD CONSTRAINT \"goal_sourceCandidateId_key\" UNIQUE (\"sourceCandidateId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"goal_sourceCandidateId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "goal_sourceCandidateId_key",
+          "public",
+          "\"public\".\"goal\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.memory.memory_sourceCandidateId_key",
+    "label": "Add unique constraint on \"memory\" (sourceCandidateId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "memory_sourceCandidateId_key",
+        "table": "memory"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"memory_sourceCandidateId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "memory_sourceCandidateId_key",
+          "public",
+          "\"public\".\"memory\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"memory_sourceCandidateId_key\"",
+        "sql": "ALTER TABLE \"public\".\"memory\" ADD CONSTRAINT \"memory_sourceCandidateId_key\" UNIQUE (\"sourceCandidateId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"memory_sourceCandidateId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "memory_sourceCandidateId_key",
+          "public",
+          "\"public\".\"memory\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.action.action_sourceCandidateId_fkey",
+    "label": "Add foreign key \"action_sourceCandidateId_fkey\" on \"action\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "action_sourceCandidateId_fkey",
+        "table": "action"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"action_sourceCandidateId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "action_sourceCandidateId_fkey",
+          "public",
+          "\"public\".\"action\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"action_sourceCandidateId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"action\"\nADD CONSTRAINT \"action_sourceCandidateId_fkey\"\nFOREIGN KEY (\"sourceCandidateId\")\nREFERENCES \"public\".\"documentCandidate\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"action_sourceCandidateId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "action_sourceCandidateId_fkey",
+          "public",
+          "\"public\".\"action\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.goal.goal_sourceCandidateId_fkey",
+    "label": "Add foreign key \"goal_sourceCandidateId_fkey\" on \"goal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "goal_sourceCandidateId_fkey",
+        "table": "goal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"goal_sourceCandidateId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "goal_sourceCandidateId_fkey",
+          "public",
+          "\"public\".\"goal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"goal_sourceCandidateId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"goal\"\nADD CONSTRAINT \"goal_sourceCandidateId_fkey\"\nFOREIGN KEY (\"sourceCandidateId\")\nREFERENCES \"public\".\"documentCandidate\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"goal_sourceCandidateId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "goal_sourceCandidateId_fkey",
+          "public",
+          "\"public\".\"goal\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.memory.memory_sourceCandidateId_fkey",
+    "label": "Add foreign key \"memory_sourceCandidateId_fkey\" on \"memory\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "memory_sourceCandidateId_fkey",
+        "table": "memory"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"memory_sourceCandidateId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "memory_sourceCandidateId_fkey",
+          "public",
+          "\"public\".\"memory\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"memory_sourceCandidateId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"memory\"\nADD CONSTRAINT \"memory_sourceCandidateId_fkey\"\nFOREIGN KEY (\"sourceCandidateId\")\nREFERENCES \"public\".\"documentCandidate\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"memory_sourceCandidateId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "memory_sourceCandidateId_fkey",
+          "public",
+          "\"public\".\"memory\""
+        ]
+      }
+    ]
+  }
+]

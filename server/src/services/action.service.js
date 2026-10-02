@@ -75,6 +75,7 @@ export async function createAction(
     status,
     priority,
     dueDate,
+    sourceCandidateId = null,
   }
 ) {
   if (!title || !title.trim()) {
@@ -126,6 +127,7 @@ export async function createAction(
     priority: priority ?? 0,
     dueDate: parsedDueDate,
     completedAt: null,
+    sourceCandidateId
   });
 
   return action;

@@ -108,6 +108,13 @@
                   "kind": "scalar"
                 }
               },
+              "sourceCandidateId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "status": {
                 "nullable": false,
                 "type": {
@@ -158,6 +165,22 @@
                 },
                 "to": {
                   "model": "Goal",
+                  "namespace": "public"
+                }
+              },
+              "sourceCandidate": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "sourceCandidateId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "DocumentCandidate",
                   "namespace": "public"
                 }
               },
@@ -216,6 +239,9 @@
                 },
                 "priority": {
                   "column": "priority"
+                },
+                "sourceCandidateId": {
+                  "column": "sourceCandidateId"
                 },
                 "status": {
                   "column": "status"
@@ -701,6 +727,22 @@
               }
             },
             "relations": {
+              "action": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "sourceCandidateId"
+                  ]
+                },
+                "to": {
+                  "model": "Action",
+                  "namespace": "public"
+                }
+              },
               "document": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -714,6 +756,38 @@
                 },
                 "to": {
                   "model": "Document",
+                  "namespace": "public"
+                }
+              },
+              "goal": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "sourceCandidateId"
+                  ]
+                },
+                "to": {
+                  "model": "Goal",
+                  "namespace": "public"
+                }
+              },
+              "memory": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "sourceCandidateId"
+                  ]
+                },
+                "to": {
+                  "model": "Memory",
                   "namespace": "public"
                 }
               },
@@ -810,6 +884,13 @@
                   "kind": "scalar"
                 }
               },
+              "sourceCandidateId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "status": {
                 "nullable": false,
                 "type": {
@@ -862,6 +943,22 @@
                   "namespace": "public"
                 }
               },
+              "sourceCandidate": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "sourceCandidateId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "DocumentCandidate",
+                  "namespace": "public"
+                }
+              },
               "suggestions": {
                 "cardinality": "1:N",
                 "on": {
@@ -907,6 +1004,9 @@
                 },
                 "priority": {
                   "column": "priority"
+                },
+                "sourceCandidateId": {
+                  "column": "sourceCandidateId"
                 },
                 "status": {
                   "column": "status"
@@ -965,6 +1065,13 @@
                   "kind": "scalar"
                 }
               },
+              "sourceCandidateId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "type": {
                 "nullable": false,
                 "type": {
@@ -988,6 +1095,22 @@
               }
             },
             "relations": {
+              "sourceCandidate": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "sourceCandidateId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "DocumentCandidate",
+                  "namespace": "public"
+                }
+              },
               "user": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -1021,6 +1144,9 @@
                 },
                 "source": {
                   "column": "source"
+                },
+                "sourceCandidateId": {
+                  "column": "sourceCandidateId"
                 },
                 "type": {
                   "column": "type"
@@ -1989,6 +2115,11 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
+                "sourceCandidateId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
                 "status": {
                   "codecId": "pg/text@1",
                   "default": {
@@ -2074,6 +2205,23 @@
                     "namespaceId": "public",
                     "tableName": "actionSuggestion"
                   }
+                },
+                {
+                  "onDelete": "setNull",
+                  "source": {
+                    "columns": [
+                      "sourceCandidateId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "action"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "documentCandidate"
+                  }
                 }
               ],
               "indexes": [
@@ -2111,6 +2259,11 @@
                 {
                   "columns": [
                     "suggestionId"
+                  ]
+                },
+                {
+                  "columns": [
+                    "sourceCandidateId"
                   ]
                 }
               ]
@@ -2628,6 +2781,11 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
+                "sourceCandidateId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
                 "status": {
                   "codecId": "pg/text@1",
                   "default": {
@@ -2679,6 +2837,23 @@
                     "namespaceId": "public",
                     "tableName": "user"
                   }
+                },
+                {
+                  "onDelete": "setNull",
+                  "source": {
+                    "columns": [
+                      "sourceCandidateId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "goal"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "documentCandidate"
+                  }
                 }
               ],
               "indexes": [
@@ -2704,7 +2879,13 @@
                   "id"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "sourceCandidateId"
+                  ]
+                }
+              ]
             },
             "memory": {
               "columns": {
@@ -2745,6 +2926,11 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "sourceCandidateId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
                 "type": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -2782,6 +2968,23 @@
                     "namespaceId": "public",
                     "tableName": "user"
                   }
+                },
+                {
+                  "onDelete": "setNull",
+                  "source": {
+                    "columns": [
+                      "sourceCandidateId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "memory"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "documentCandidate"
+                  }
                 }
               ],
               "indexes": [
@@ -2807,7 +3010,13 @@
                   "id"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "sourceCandidateId"
+                  ]
+                }
+              ]
             },
             "oAuthAccount": {
               "columns": {
@@ -3425,7 +3634,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "83d61faac86ccaa2dcbcd0f564d2bdafa7a20e0023683a0fba2549ad6f642fb1"
+    "storageHash": "a0edcd043b2b961e8ae9ca504b78a58314fc27c771eff86ef84ea4e131c313bf"
   },
   "capabilities": {
     "postgres": {
