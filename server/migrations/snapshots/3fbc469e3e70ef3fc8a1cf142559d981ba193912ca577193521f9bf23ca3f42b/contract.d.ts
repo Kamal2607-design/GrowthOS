@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'ccb8d29e3ee0fd8cc739633e56d74adbbd7f8b8b611fae21a228e2d544a50bc0'>;
+  StorageHashBase<'3fbc469e3e70ef3fc8a1cf142559d981ba193912ca577193521f9bf23ca3f42b'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -318,12 +318,9 @@ export type FieldOutputTypes = {
       readonly sourceCandidateId: CodecTypes['pg/int4@1']['output'] | null;
       readonly type: CodecTypes['pg/text@1']['output'];
       readonly content: CodecTypes['pg/text@1']['output'];
-      readonly normalizedContent: CodecTypes['pg/text@1']['output'] | null;
       readonly source: CodecTypes['pg/text@1']['output'] | null;
       readonly importance: CodecTypes['pg/int4@1']['output'];
       readonly status: CodecTypes['pg/text@1']['output'];
-      readonly normalizationStatus: CodecTypes['pg/text@1']['output'];
-      readonly normalizedAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
     };
@@ -473,12 +470,9 @@ export type FieldInputTypes = {
       readonly sourceCandidateId: CodecTypes['pg/int4@1']['input'] | null;
       readonly type: CodecTypes['pg/text@1']['input'];
       readonly content: CodecTypes['pg/text@1']['input'];
-      readonly normalizedContent: CodecTypes['pg/text@1']['input'] | null;
       readonly source: CodecTypes['pg/text@1']['input'] | null;
       readonly importance: CodecTypes['pg/int4@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
-      readonly normalizationStatus: CodecTypes['pg/text@1']['input'];
-      readonly normalizedAt: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
     };
@@ -627,9 +621,6 @@ export type StorageColumnTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly importance: CodecTypes['pg/int4@1']['output'];
-      readonly normalizationStatus: CodecTypes['pg/text@1']['output'];
-      readonly normalizedAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
-      readonly normalizedContent: CodecTypes['pg/text@1']['output'] | null;
       readonly source: CodecTypes['pg/text@1']['output'] | null;
       readonly sourceCandidateId: CodecTypes['pg/int4@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
@@ -782,9 +773,6 @@ export type StorageColumnInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly importance: CodecTypes['pg/int4@1']['input'];
-      readonly normalizationStatus: CodecTypes['pg/text@1']['input'];
-      readonly normalizedAt: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
-      readonly normalizedContent: CodecTypes['pg/text@1']['input'] | null;
       readonly source: CodecTypes['pg/text@1']['input'] | null;
       readonly sourceCandidateId: CodecTypes['pg/int4@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
@@ -983,12 +971,9 @@ export namespace Models {
     sourceCandidateId: CodecTypes['pg/int4@1']['output'] | null;
     type: CodecTypes['pg/text@1']['output'];
     content: CodecTypes['pg/text@1']['output'];
-    normalizedContent: CodecTypes['pg/text@1']['output'] | null;
     source: CodecTypes['pg/text@1']['output'] | null;
     importance: CodecTypes['pg/int4@1']['output'];
     status: CodecTypes['pg/text@1']['output'];
-    normalizationStatus: CodecTypes['pg/text@1']['output'];
-    normalizedAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
     sourceCandidate: public_DocumentCandidate | null;
@@ -1803,11 +1788,6 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
-                readonly normalizedContent: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
                 readonly source: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
@@ -1830,20 +1810,6 @@ type ContractBase = Omit<
                     readonly kind: 'literal';
                     readonly value: DefaultLiteralValue<'pg/text@1', 'active'>;
                   };
-                };
-                readonly normalizationStatus: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'pending'>;
-                  };
-                };
-                readonly normalizedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-temporal@1';
-                  readonly nullable: true;
                 };
                 readonly createdAt: {
                   readonly nativeType: 'timestamptz';
@@ -1877,12 +1843,6 @@ type ContractBase = Omit<
                   readonly name: 'memory_userId_status_idx_e4a128ba';
                   readonly prefix: 'memory_userId_status_idx';
                   readonly columns: readonly ['userId', 'status'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'memory_userId_normalizationStatus_idx_a7fd81b8';
-                  readonly prefix: 'memory_userId_normalizationStatus_idx';
-                  readonly columns: readonly ['userId', 'normalizationStatus'];
                   readonly unique: false;
                 },
               ];
@@ -3065,10 +3025,6 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly normalizedContent: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
               readonly source: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -3080,17 +3036,6 @@ type ContractBase = Omit<
               readonly status: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly normalizationStatus: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly normalizedAt: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-temporal@1';
-                };
               };
               readonly createdAt: {
                 readonly nullable: false;
@@ -3139,12 +3084,9 @@ type ContractBase = Omit<
                 readonly sourceCandidateId: { readonly column: 'sourceCandidateId' };
                 readonly type: { readonly column: 'type' };
                 readonly content: { readonly column: 'content' };
-                readonly normalizedContent: { readonly column: 'normalizedContent' };
                 readonly source: { readonly column: 'source' };
                 readonly importance: { readonly column: 'importance' };
                 readonly status: { readonly column: 'status' };
-                readonly normalizationStatus: { readonly column: 'normalizationStatus' };
-                readonly normalizedAt: { readonly column: 'normalizedAt' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };

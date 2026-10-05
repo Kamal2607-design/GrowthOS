@@ -1058,6 +1058,27 @@
                   "kind": "scalar"
                 }
               },
+              "normalizationStatus": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "normalizedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "normalizedContent": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "source": {
                 "nullable": true,
                 "type": {
@@ -1069,6 +1090,13 @@
                 "nullable": true,
                 "type": {
                   "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -1142,11 +1170,23 @@
                 "importance": {
                   "column": "importance"
                 },
+                "normalizationStatus": {
+                  "column": "normalizationStatus"
+                },
+                "normalizedAt": {
+                  "column": "normalizedAt"
+                },
+                "normalizedContent": {
+                  "column": "normalizedContent"
+                },
                 "source": {
                   "column": "source"
                 },
                 "sourceCandidateId": {
                   "column": "sourceCandidateId"
+                },
+                "status": {
+                  "column": "status"
                 },
                 "type": {
                   "column": "type"
@@ -2921,6 +2961,25 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
+                "normalizationStatus": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "pending"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "normalizedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "normalizedContent": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "source": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -2930,6 +2989,15 @@
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
                   "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "active"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
                 },
                 "type": {
                   "codecId": "pg/text@1",
@@ -3002,6 +3070,24 @@
                   ],
                   "name": "memory_userId_idx_a489d58a",
                   "prefix": "memory_userId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId",
+                    "normalizationStatus"
+                  ],
+                  "name": "memory_userId_normalizationStatus_idx_a7fd81b8",
+                  "prefix": "memory_userId_normalizationStatus_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId",
+                    "status"
+                  ],
+                  "name": "memory_userId_status_idx_e4a128ba",
+                  "prefix": "memory_userId_status_idx",
                   "unique": false
                 }
               ],
@@ -3634,7 +3720,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "a0edcd043b2b961e8ae9ca504b78a58314fc27c771eff86ef84ea4e131c313bf"
+    "storageHash": "ccb8d29e3ee0fd8cc739633e56d74adbbd7f8b8b611fae21a228e2d544a50bc0"
   },
   "capabilities": {
     "postgres": {

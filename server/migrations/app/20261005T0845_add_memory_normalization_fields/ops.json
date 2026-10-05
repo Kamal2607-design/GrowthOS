@@ -1,0 +1,167 @@
+[
+  {
+    "id": "column.public.memory.normalizationStatus",
+    "label": "Add column \"normalizationStatus\" to \"memory\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "normalizationStatus",
+        "table": "memory"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"normalizationStatus\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "memory",
+          "normalizationStatus"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"normalizationStatus\"",
+        "sql": "ALTER TABLE \"public\".\"memory\" ADD COLUMN \"normalizationStatus\" text DEFAULT 'pending' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"normalizationStatus\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "memory",
+          "normalizationStatus"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.memory.normalizedAt",
+    "label": "Add column \"normalizedAt\" to \"memory\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "normalizedAt",
+        "table": "memory"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"normalizedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "memory",
+          "normalizedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"normalizedAt\"",
+        "sql": "ALTER TABLE \"public\".\"memory\" ADD COLUMN \"normalizedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"normalizedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "memory",
+          "normalizedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.memory.normalizedContent",
+    "label": "Add column \"normalizedContent\" to \"memory\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "normalizedContent",
+        "table": "memory"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"normalizedContent\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "memory",
+          "normalizedContent"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"normalizedContent\"",
+        "sql": "ALTER TABLE \"public\".\"memory\" ADD COLUMN \"normalizedContent\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"normalizedContent\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "memory",
+          "normalizedContent"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.memory.memory_userId_normalizationStatus_idx_a7fd81b8",
+    "label": "Create index \"memory_userId_normalizationStatus_idx_a7fd81b8\" on \"memory\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "memory_userId_normalizationStatus_idx_a7fd81b8",
+        "table": "memory"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"memory_userId_normalizationStatus_idx_a7fd81b8\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"memory_userId_normalizationStatus_idx_a7fd81b8\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"memory_userId_normalizationStatus_idx_a7fd81b8\"",
+        "sql": "CREATE INDEX \"memory_userId_normalizationStatus_idx_a7fd81b8\" ON \"public\".\"memory\" (\"userId\", \"normalizationStatus\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"memory_userId_normalizationStatus_idx_a7fd81b8\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"memory_userId_normalizationStatus_idx_a7fd81b8\""
+        ]
+      }
+    ]
+  }
+]
