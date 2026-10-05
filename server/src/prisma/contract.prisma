@@ -153,9 +153,14 @@ model Document {
 }
 
 model Memory {
-  id          Int             @id @default(autoincrement())
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      Int
+  id Int @id @default(autoincrement())
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+  userId Int
 
   sourceCandidate DocumentCandidate? @relation(
     "MemorySourceCandidate",
@@ -165,16 +170,24 @@ model Memory {
   )
   sourceCandidateId Int? @unique
 
-  type        String
-  content     String
-  source      String?
-  importance  Int             @default(1)
+  type String
+  content String
+  normalizedContent String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now())
+  source String?
+  importance Int @default(1)
+
+  status String @default("active")
+  normalizationStatus String @default("pending")
+  normalizedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 
   @@index([userId])
   @@index([type])
+  @@index([userId, status])
+  @@index([userId, normalizationStatus])
 }
 
 model TimelineEvent {

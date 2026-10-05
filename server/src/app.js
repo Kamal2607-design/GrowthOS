@@ -11,6 +11,8 @@ import actionSuggestionRoutes from './routes/action-suggestion.routes.js';
 import reflectionRoutes from './routes/reflection.routes.js';
 import aiReflectionRoutes from './routes/ai-reflection.routes.js';
 import documentRouter from './routes/document.route.js';
+import goalProgressRoutes from './routes/goal-progress.routes.js';
+import memoryRoutes from './routes/memory.routes.js';
 
 const app = express();
 
@@ -40,4 +42,9 @@ app.use(
   aiReflectionRoutes
 );
 app.use('/api/documents', documentRouter);
+app.use(
+  '/api/goal-progress',
+  goalProgressRoutes
+);
+app.use('/api/memories', memoryRoutes);
 export default app;
