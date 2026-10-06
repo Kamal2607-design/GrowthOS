@@ -1,4 +1,33 @@
 // use prisma-8
+types {
+  Embedding768 = pgvector.Vector(768)
+}
+
+model MemoryEmbedding {
+  id Int @id @default(autoincrement())
+
+  memory Memory @relation(
+    fields: [memoryId],
+    references: [id],
+    onDelete: Cascade
+  )
+  memoryId Int @unique
+
+  embedding Embedding768?
+
+  model String
+  dimensions Int
+
+  contentHash String
+
+  status String @default("pending")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@index([status])
+  @@index([model])
+}
 
 model User {
   id           Int      @id @default(autoincrement())
@@ -22,6 +51,7 @@ model User {
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @default(now())
+  @@map("user")
 }
 
 model Vision {
@@ -36,6 +66,7 @@ model Vision {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now())
+  @@map("vision")
 }
 
 model Goal {
@@ -66,6 +97,7 @@ model Goal {
 
   @@index([userId])
   @@index([status])
+  @@map("goal")
 }
 
 model Action {
@@ -102,6 +134,7 @@ model Action {
   @@index([userId])
   @@index([goalId])
   @@index([status])
+  @@map("action")
 }
 
 model Reflection {
@@ -126,6 +159,7 @@ model Reflection {
 
   @@index([userId])
   @@index([reflectionDate])
+  @@map("reflection")
 }
 
 model Document {
@@ -150,6 +184,7 @@ model Document {
 
   @@index([userId])
   @@index([processingStatus])
+  @@map("document")
 }
 
 model Memory {
@@ -170,6 +205,8 @@ model Memory {
   )
   sourceCandidateId Int? @unique
 
+  embedding MemoryEmbedding?
+
   type String
   content String
   normalizedContent String?
@@ -188,6 +225,7 @@ model Memory {
   @@index([type])
   @@index([userId, status])
   @@index([userId, normalizationStatus])
+  @@map("memory")
 }
 
 model TimelineEvent {
@@ -205,6 +243,7 @@ model TimelineEvent {
   @@index([userId])
   @@index([eventDate])
   @@index([eventType])
+  @@map("timelineEvent")
 }
 
 model OAuthAccount {
@@ -220,6 +259,7 @@ model OAuthAccount {
 
   @@unique([provider, providerAccountId])
   @@index([userId])
+  @@map("oAuthAccount")
 }
 
 model ActionSuggestion {
@@ -250,6 +290,7 @@ model ActionSuggestion {
   @@index([userId])
   @@index([goalId])
   @@index([status])
+  @@map("actionSuggestion")
 }
 
 model ReflectionAnalysis {
@@ -276,6 +317,7 @@ model ReflectionAnalysis {
   updatedAt DateTime @default(now())
 
   @@index([userId])
+  @@map("reflectionAnalysis")
 }
 
 model DocumentCandidate {
@@ -317,4 +359,5 @@ model DocumentCandidate {
   @@index([userId, status])
   @@index([documentId])
   @@index([type])
+  @@map("documentCandidate") 
 }
