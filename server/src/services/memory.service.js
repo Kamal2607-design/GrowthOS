@@ -208,63 +208,118 @@ export async function getMemoryById(
 export async function updateMemory(
   userId,
   memoryId,
-  {
-    type,
-    content,
-    source,
-    importance,
-    status,
-  }
+  updates
 ) {
   if (!Number.isInteger(memoryId)) {
     throw new Error('INVALID_MEMORY_ID');
   }
 
-  await getMemoryById(userId, memoryId);
+  const memory =
+    await db.orm.public.Memory.first({
+      id: memoryId,
+      userId,
+    });
+
+  if (!memory) {
+    throw new Error('MEMORY_NOT_FOUND');
+  }
+
+  const {
+    type,
+    content,
+    source,
+    importance,
+    status,
+  } = updates;
 
   const updateData = {};
 
   if (type !== undefined) {
-    validateMemoryType(type);
     updateData.type = type;
   }
 
-  if (content !== undefined) {
-    if (
-      typeof content !== 'string' ||
-      !content.trim()
-    ) {
-      throw new Error('MEMORY_CONTENT_REQUIRED');
-    }
-
-    updateData.content = content.trim();
-  }
-
   if (source !== undefined) {
-    validateMemorySource(source);
     updateData.source = source;
   }
 
   if (importance !== undefined) {
-    validateImportance(importance);
     updateData.importance = importance;
   }
 
   if (status !== undefined) {
-    validateMemoryStatus(status);
     updateData.status = status;
   }
 
-  if (Object.keys(updateData).length === 0) {
-    throw new Error('NO_MEMORY_FIELDS_TO_UPDATE');
+  /*
+   * Track whether the actual memory content changed.
+   *
+   * If content changes, the existing:
+   * - normalizedContent
+   * - normalizationStatus
+   * - normalizedAt
+   * - embedding
+   *
+   * are no longer valid for the new content.
+   */
+  let contentChanged = false;
+
+  if (content !== undefined) {
+    const trimmedContent = content.trim();
+
+    if (!trimmedContent) {
+      throw new Error('MEMORY_CONTENT_REQUIRED');
+    }
+
+    if (trimmedContent !== memory.content) {
+      contentChanged = true;
+
+      updateData.content = trimmedContent;
+
+      /*
+       * Invalidate normalization.
+       */
+      updateData.normalizedContent = null;
+      updateData.normalizationStatus = 'pending';
+      updateData.normalizedAt = null;
+    }
   }
 
-  return db.orm.public.Memory
-    .where({
-      id: memoryId,
-      userId,
-    })
-    .update(updateData);
+  /*
+   * Update the Memory record.
+   */
+  const updatedMemory =
+    await db.orm.public.Memory
+      .where({
+        id: memoryId,
+        userId,
+      })
+      .update(updateData);
+
+  /*
+   * If the raw memory content changed,
+   * the existing embedding is also stale.
+   *
+   * Keep the embedding row so we can regenerate
+   * it later, but mark it as pending.
+   */
+  if (contentChanged) {
+    const existingEmbedding =
+      await db.orm.public.MemoryEmbedding.first({
+        memoryId,
+      });
+
+    if (existingEmbedding) {
+      await db.orm.public.MemoryEmbedding
+        .where({
+          memoryId,
+        })
+        .update({
+          status: 'pending',
+        });
+    }
+  }
+
+  return updatedMemory;
 }
 
 export async function archiveMemory(

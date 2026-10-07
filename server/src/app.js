@@ -13,6 +13,7 @@ import aiReflectionRoutes from './routes/ai-reflection.routes.js';
 import documentRouter from './routes/document.route.js';
 import goalProgressRoutes from './routes/goal-progress.routes.js';
 import memoryRoutes from './routes/memory.routes.js';
+import memoryEmbeddingRoutes from './routes/memory-embedding.routes.js';
 
 const app = express();
 
@@ -47,4 +48,9 @@ app.use(
   goalProgressRoutes
 );
 app.use('/api/memories', memoryRoutes);
+
+app.use(
+  '/api',
+  memoryEmbeddingRoutes
+);
 export default app;
