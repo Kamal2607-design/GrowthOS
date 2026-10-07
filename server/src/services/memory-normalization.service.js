@@ -3,6 +3,9 @@ import { db } from '../prisma/db.ts';
 import {
   normalizeMemoryWithAI,
 } from './ai/memory-normalization-ai.service.js';
+import {
+  generateMemoryEmbedding,
+} from './memory-embedding.service.js';
 
 const NORMALIZATION_STATUSES = [
   'pending',
@@ -45,31 +48,34 @@ export async function normalizeMemory(
       normalizationStatus: 'processing',
     });
 
+  let normalized;
+
+  // ==========================================
+  // STEP 1: NORMALIZATION
+  // ==========================================
+
   try {
-    const normalized =
-      await normalizeMemoryWithAI(
-        memory
-      );
+    normalized =
+      await normalizeMemoryWithAI(memory);
 
-    const updatedMemory =
-      await db.orm.public.Memory
-        .where({
-          id: memoryId,
-          userId,
-        })
-        .update({
-          normalizedContent:
-            normalized.normalizedContent,
+    await db.orm.public.Memory
+      .where({
+        id: memoryId,
+        userId,
+      })
+      .update({
+        normalizedContent:
+          normalized.normalizedContent,
 
-          normalizationStatus:
-            'completed',
+        normalizationStatus:
+          'completed',
 
-          normalizedAt:
-             Temporal.Now.instant(),
-        });
+        normalizedAt:
+          Temporal.Now.instant(),
+      });
 
-    return updatedMemory;
   } catch (error) {
+
     await db.orm.public.Memory
       .where({
         id: memoryId,
@@ -81,6 +87,24 @@ export async function normalizeMemory(
 
     throw error;
   }
+
+  // ==========================================
+  // STEP 2: EMBEDDING
+  // ==========================================
+
+  await generateMemoryEmbedding(
+    userId,
+    memoryId
+  );
+
+  // ==========================================
+  // STEP 3: RETURN FRESH MEMORY
+  // ==========================================
+
+  return await db.orm.public.Memory.first({
+    id: memoryId,
+    userId,
+  });
 }
 
 export async function normalizePendingMemories(
