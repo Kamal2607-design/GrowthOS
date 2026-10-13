@@ -25,6 +25,7 @@ export async function createGoal(
     status,
     priority,
     targetDate,
+    sourceCandidateId = null,
   }
 ) {
   if (!title || !title.trim()) {
@@ -52,6 +53,7 @@ export async function createGoal(
     status: status || 'active',
     priority: priority ?? 0,
     targetDate: parsedTargetDate,
+    sourceCandidateId,
   });
 
   return goal;

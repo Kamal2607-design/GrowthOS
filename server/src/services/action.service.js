@@ -75,6 +75,7 @@ export async function createAction(
     status,
     priority,
     dueDate,
+    sourceCandidateId = null,
   }
 ) {
   if (!title || !title.trim()) {
@@ -126,6 +127,7 @@ export async function createAction(
     priority: priority ?? 0,
     dueDate: parsedDueDate,
     completedAt: null,
+    sourceCandidateId
   });
 
   return action;
@@ -333,7 +335,7 @@ export async function updateActionStatus(
   };
 
   if (status === 'completed') {
-    updateData.completedAt = new Date();
+    updateData.completedAt = Temporal.Now.instant();
   } else {
     updateData.completedAt = null;
   }

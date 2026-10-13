@@ -11,6 +11,13 @@ import actionSuggestionRoutes from './routes/action-suggestion.routes.js';
 import reflectionRoutes from './routes/reflection.routes.js';
 import aiReflectionRoutes from './routes/ai-reflection.routes.js';
 import documentRouter from './routes/document.route.js';
+import goalProgressRoutes from './routes/goal-progress.routes.js';
+import memoryRoutes from './routes/memory.routes.js';
+import memoryEmbeddingRoutes from './routes/memory-embedding.routes.js';
+import memoryRetrievalRoutes from './routes/memory-retrieval.routes.js';
+import contextAssemblyRoutes from './routes/context-assembly.routes.js';
+import ragRoutes from './routes/rag.routes.js';
+import actionPlannerRoutes from './routes/action-planner.routes.js';
 
 const app = express();
 
@@ -40,4 +47,30 @@ app.use(
   aiReflectionRoutes
 );
 app.use('/api/documents', documentRouter);
+app.use(
+  '/api/goal-progress',
+  goalProgressRoutes
+);
+app.use('/api/memories', memoryRoutes);
+
+app.use(
+  '/api',
+  memoryEmbeddingRoutes
+);
+app.use(
+  '/api/memories/search',
+  memoryRetrievalRoutes
+);
+app.use(
+  '/api/context',
+  contextAssemblyRoutes
+);
+app.use(
+  '/api/rag',
+  ragRoutes
+);
+app.use(
+  '/api/action-planner',
+  actionPlannerRoutes
+);
 export default app;

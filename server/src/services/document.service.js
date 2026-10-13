@@ -320,52 +320,43 @@ export async function getMemoryCandidates(
     .all();
 }
 
-
-export async function acceptMemoryCandidate(
-  userId,
-  candidateId
-) {
-  const candidate =
-    await db.orm.public.DocumentCandidate.first({
-      id: candidateId,
-      userId,
-      type: 'memory',
-    });
+export async function acceptMemoryCandidate(userId, candidateId) {
+  const candidate = await db.orm.public.DocumentCandidate.first({
+    id: candidateId,
+    userId,
+    type: 'memory',
+  });
 
   if (!candidate) {
     throw new Error('MEMORY_CANDIDATE_NOT_FOUND');
   }
 
-  // If already accepted, return the existing Memory.
-  // The source marker allows us to find it without
-  // adding a new field to the Memory model.
-  const source =
-    `document-candidate:${candidate.id}`;
-
-  const existingMemory =
-    await db.orm.public.Memory.first({
-      userId,
-      source,
-    });
+  // Check the source relationship first. This also handles a retry
+  // where the Memory was created but the candidate update failed.
+  const existingMemory = await db.orm.public.Memory.first({
+    sourceCandidateId: candidate.id,
+    userId,
+  });
 
   if (existingMemory) {
+    if (candidate.status === 'rejected') {
+      throw new Error('MEMORY_CANDIDATE_ALREADY_REVIEWED');
+    }
+
     if (candidate.status !== 'accepted') {
-      await db.orm.public.DocumentCandidate
-        .where({
-          id: candidate.id,
-          userId,
-        })
-        .update({
-          status: 'accepted',
-          reviewedAt: Temporal.Now.instant(),
-        });
+      await db.orm.public.DocumentCandidate.where({
+        id: candidate.id,
+        userId,
+      }).update({
+        status: 'accepted',
+        reviewedAt: Temporal.Now.instant(),
+      });
     }
 
     return {
       candidateId: candidate.id,
       status: 'accepted',
       memory: existingMemory,
-      alreadyAccepted: true,
     };
   }
 
@@ -377,35 +368,49 @@ export async function acceptMemoryCandidate(
     throw new Error('MEMORY_CANDIDATE_CONTENT_REQUIRED');
   }
 
-  // Create the real Memory record.
-  const memory =
-    await db.orm.public.Memory.create({
+  const importance = Math.min(
+    5,
+    Math.max(1, candidate.importance ?? 1),
+  );
+
+  let memory;
+
+  try {
+    memory = await db.orm.public.Memory.create({
       userId,
       type: 'document_insight',
       content: candidate.content.trim(),
-      source,
-      importance:
-        Number.isInteger(candidate.importance)
-          ? Math.min(5, Math.max(1, candidate.importance))
-          : 1,
+      source: `document-candidate:${candidate.id}`,
+      sourceCandidateId: candidate.id,
+      importance,
+    });
+  } catch (error) {
+    // Another request may have created the Memory first.
+    // The unique sourceCandidateId constraint prevents duplicates.
+    const createdMemory = await db.orm.public.Memory.first({
+      sourceCandidateId: candidate.id,
+      userId,
     });
 
-  // Mark the candidate as accepted.
-  await db.orm.public.DocumentCandidate
-    .where({
-      id: candidate.id,
-      userId,
-    })
-    .update({
-      status: 'accepted',
-      reviewedAt: Temporal.Now.instant(),
-    });
+    if (!createdMemory) {
+      throw error;
+    }
+
+    memory = createdMemory;
+  }
+
+  await db.orm.public.DocumentCandidate.where({
+    id: candidate.id,
+    userId,
+  }).update({
+    status: 'accepted',
+    reviewedAt: Temporal.Now.instant(),
+  });
 
   return {
     candidateId: candidate.id,
     status: 'accepted',
     memory,
-    alreadyAccepted: false,
   };
 }
 
@@ -472,50 +477,85 @@ export async function getGoalCandidates(
     .all();
 }
 
-export async function acceptGoalCandidate(
-  userId,
-  candidateId
-) {
-  const candidate =
-    await db.orm.public.DocumentCandidate.first({
-      id: candidateId,
-      userId,
-      type: 'goal',
-    });
+
+export async function acceptGoalCandidate(userId, candidateId) {
+  const candidate = await db.orm.public.DocumentCandidate.first({
+    id: candidateId,
+    userId,
+    type: 'goal',
+  });
 
   if (!candidate) {
     throw new Error('GOAL_CANDIDATE_NOT_FOUND');
   }
 
+  const existingGoal = await db.orm.public.Goal.first({
+    sourceCandidateId: candidate.id,
+    userId,
+  });
+
+  if (existingGoal) {
+    if (candidate.status === 'rejected') {
+      throw new Error('GOAL_CANDIDATE_ALREADY_REVIEWED');
+    }
+
+    if (candidate.status !== 'accepted') {
+      await db.orm.public.DocumentCandidate.where({
+        id: candidate.id,
+        userId,
+      }).update({
+        status: 'accepted',
+        reviewedAt: Temporal.Now.instant(),
+      });
+    }
+
+    return {
+      candidateId: candidate.id,
+      status: 'accepted',
+      goal: existingGoal,
+    };
+  }
+
   if (candidate.status !== 'pending') {
-    throw new Error(
-      'GOAL_CANDIDATE_ALREADY_REVIEWED'
-    );
+    throw new Error('GOAL_CANDIDATE_ALREADY_REVIEWED');
   }
 
   if (!candidate.title?.trim()) {
-    throw new Error(
-      'GOAL_CANDIDATE_TITLE_REQUIRED'
-    );
+    throw new Error('GOAL_CANDIDATE_TITLE_REQUIRED');
   }
 
-  const goal = await createGoal(userId, {
-    title: candidate.title.trim(),
-    description: candidate.reason?.trim() || null,
-    status: 'active',
-    priority: candidate.importance ?? 0,
-    targetDate: null,
-  });
+  let goal;
 
-  await db.orm.public.DocumentCandidate
-    .where({
-      id: candidate.id,
-      userId,
-    })
-    .update({
-      status: 'accepted',
-      reviewedAt: Temporal.Now.instant(),
+  try {
+    goal = await createGoal(userId, {
+      title: candidate.title.trim(),
+      description: candidate.reason?.trim() || null,
+      status: 'active',
+      priority: candidate.importance ?? 0,
+      targetDate: null,
+      sourceCandidateId: candidate.id,
     });
+  } catch (error) {
+    // Recover from a concurrent request that created this Goal.
+    const createdGoal = await db.orm.public.Goal.first({
+      sourceCandidateId: candidate.id,
+      userId,
+    });
+
+    if (!createdGoal) {
+      throw error;
+    }
+
+    goal = createdGoal;
+  }
+
+  await db.orm.public.DocumentCandidate.where({
+    id: candidate.id,
+    userId,
+  }).update({
+    status: 'accepted',
+    reviewedAt: Temporal.Now.instant(),
+  });
 
   return {
     candidateId: candidate.id,
@@ -588,54 +628,87 @@ export async function getActionCandidates(
     .all();
 }
 
-export async function acceptActionCandidate(
-  userId,
-  candidateId
-) {
-  const candidate =
-    await db.orm.public.DocumentCandidate.first({
-      id: candidateId,
-      userId,
-      type: 'action',
-    });
+
+export async function acceptActionCandidate(userId, candidateId) {
+  const candidate = await db.orm.public.DocumentCandidate.first({
+    id: candidateId,
+    userId,
+    type: 'action',
+  });
 
   if (!candidate) {
-    throw new Error(
-      'ACTION_CANDIDATE_NOT_FOUND'
-    );
+    throw new Error('ACTION_CANDIDATE_NOT_FOUND');
+  }
+
+  const existingAction = await db.orm.public.Action.first({
+    sourceCandidateId: candidate.id,
+    userId,
+  });
+
+  if (existingAction) {
+    if (candidate.status === 'rejected') {
+      throw new Error('ACTION_CANDIDATE_ALREADY_REVIEWED');
+    }
+
+    if (candidate.status !== 'accepted') {
+      await db.orm.public.DocumentCandidate.where({
+        id: candidate.id,
+        userId,
+      }).update({
+        status: 'accepted',
+        reviewedAt: Temporal.Now.instant(),
+      });
+    }
+
+    return {
+      candidateId: candidate.id,
+      status: 'accepted',
+      action: existingAction,
+    };
   }
 
   if (candidate.status !== 'pending') {
-    throw new Error(
-      'ACTION_CANDIDATE_ALREADY_REVIEWED'
-    );
+    throw new Error('ACTION_CANDIDATE_ALREADY_REVIEWED');
   }
 
   if (!candidate.title?.trim()) {
-    throw new Error(
-      'ACTION_CANDIDATE_TITLE_REQUIRED'
-    );
+    throw new Error('ACTION_CANDIDATE_TITLE_REQUIRED');
   }
 
-  const action = await createAction(userId, {
-    title: candidate.title.trim(),
-    description: candidate.reason?.trim() || null,
-    goalId: null,
-    suggestionId: null,
-    status: 'pending',
-    priority: candidate.importance ?? 0,
-    dueDate: null,
-  });
+  let action;
 
-  await db.orm.public.DocumentCandidate
-    .where({
-      id: candidate.id,
-      userId,
-    })
-    .update({
-      status: 'accepted',
-      reviewedAt: Temporal.Now.instant(),
+  try {
+    action = await createAction(userId, {
+      title: candidate.title.trim(),
+      description: candidate.reason?.trim() || null,
+      goalId: null,
+      suggestionId: null,
+      status: 'pending',
+      priority: candidate.importance ?? 0,
+      dueDate: null,
+      sourceCandidateId: candidate.id,
     });
+  } catch (error) {
+    // Recover if another request created this Action first.
+    const createdAction = await db.orm.public.Action.first({
+      sourceCandidateId: candidate.id,
+      userId,
+    });
+
+    if (!createdAction) {
+      throw error;
+    }
+
+    action = createdAction;
+  }
+
+  await db.orm.public.DocumentCandidate.where({
+    id: candidate.id,
+    userId,
+  }).update({
+    status: 'accepted',
+    reviewedAt: Temporal.Now.instant(),
+  });
 
   return {
     candidateId: candidate.id,

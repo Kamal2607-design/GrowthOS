@@ -1,0 +1,323 @@
+[
+  {
+    "id": "table.documentCandidate",
+    "label": "Create table \"documentCandidate\"",
+    "summary": "Creates table \"documentCandidate\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "documentCandidate"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"documentCandidate\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentCandidate\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"documentCandidate\"",
+        "sql": "CREATE TABLE \"public\".\"documentCandidate\" (\n  \"content\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"documentId\" int4 NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"importance\" int4,\n  \"reason\" text,\n  \"reviewedAt\" timestamptz,\n  \"sourceIndex\" int4 NOT NULL,\n  \"status\" text DEFAULT 'pending' NOT NULL,\n  \"title\" text,\n  \"type\" text NOT NULL,\n  \"updatedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"documentCandidate\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentCandidate\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.documentCandidate.documentCandidate_documentId_type_sourceIndex_key",
+    "label": "Add unique constraint on \"documentCandidate\" (documentId, type, sourceIndex)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "documentCandidate_documentId_type_sourceIndex_key",
+        "table": "documentCandidate"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"documentCandidate_documentId_type_sourceIndex_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentCandidate_documentId_type_sourceIndex_key",
+          "public",
+          "\"public\".\"documentCandidate\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"documentCandidate_documentId_type_sourceIndex_key\"",
+        "sql": "ALTER TABLE \"public\".\"documentCandidate\" ADD CONSTRAINT \"documentCandidate_documentId_type_sourceIndex_key\" UNIQUE (\"documentId\", \"type\", \"sourceIndex\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"documentCandidate_documentId_type_sourceIndex_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentCandidate_documentId_type_sourceIndex_key",
+          "public",
+          "\"public\".\"documentCandidate\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.documentCandidate.documentCandidate_documentId_idx_825ef746",
+    "label": "Create index \"documentCandidate_documentId_idx_825ef746\" on \"documentCandidate\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "documentCandidate_documentId_idx_825ef746",
+        "table": "documentCandidate"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"documentCandidate_documentId_idx_825ef746\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentCandidate_documentId_idx_825ef746\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"documentCandidate_documentId_idx_825ef746\"",
+        "sql": "CREATE INDEX \"documentCandidate_documentId_idx_825ef746\" ON \"public\".\"documentCandidate\" (\"documentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"documentCandidate_documentId_idx_825ef746\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentCandidate_documentId_idx_825ef746\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.documentCandidate.documentCandidate_type_idx_b6b604ea",
+    "label": "Create index \"documentCandidate_type_idx_b6b604ea\" on \"documentCandidate\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "documentCandidate_type_idx_b6b604ea",
+        "table": "documentCandidate"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"documentCandidate_type_idx_b6b604ea\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentCandidate_type_idx_b6b604ea\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"documentCandidate_type_idx_b6b604ea\"",
+        "sql": "CREATE INDEX \"documentCandidate_type_idx_b6b604ea\" ON \"public\".\"documentCandidate\" (\"type\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"documentCandidate_type_idx_b6b604ea\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentCandidate_type_idx_b6b604ea\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.documentCandidate.documentCandidate_userId_idx_a489d58a",
+    "label": "Create index \"documentCandidate_userId_idx_a489d58a\" on \"documentCandidate\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "documentCandidate_userId_idx_a489d58a",
+        "table": "documentCandidate"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"documentCandidate_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentCandidate_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"documentCandidate_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"documentCandidate_userId_idx_a489d58a\" ON \"public\".\"documentCandidate\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"documentCandidate_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentCandidate_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.documentCandidate.documentCandidate_userId_status_idx_e4a128ba",
+    "label": "Create index \"documentCandidate_userId_status_idx_e4a128ba\" on \"documentCandidate\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "documentCandidate_userId_status_idx_e4a128ba",
+        "table": "documentCandidate"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"documentCandidate_userId_status_idx_e4a128ba\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentCandidate_userId_status_idx_e4a128ba\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"documentCandidate_userId_status_idx_e4a128ba\"",
+        "sql": "CREATE INDEX \"documentCandidate_userId_status_idx_e4a128ba\" ON \"public\".\"documentCandidate\" (\"userId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"documentCandidate_userId_status_idx_e4a128ba\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentCandidate_userId_status_idx_e4a128ba\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.documentCandidate.documentCandidate_userId_fkey",
+    "label": "Add foreign key \"documentCandidate_userId_fkey\" on \"documentCandidate\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "documentCandidate_userId_fkey",
+        "table": "documentCandidate"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"documentCandidate_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentCandidate_userId_fkey",
+          "public",
+          "\"public\".\"documentCandidate\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"documentCandidate_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"documentCandidate\"\nADD CONSTRAINT \"documentCandidate_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"documentCandidate_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentCandidate_userId_fkey",
+          "public",
+          "\"public\".\"documentCandidate\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.documentCandidate.documentCandidate_documentId_fkey",
+    "label": "Add foreign key \"documentCandidate_documentId_fkey\" on \"documentCandidate\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "documentCandidate_documentId_fkey",
+        "table": "documentCandidate"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"documentCandidate_documentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentCandidate_documentId_fkey",
+          "public",
+          "\"public\".\"documentCandidate\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"documentCandidate_documentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"documentCandidate\"\nADD CONSTRAINT \"documentCandidate_documentId_fkey\"\nFOREIGN KEY (\"documentId\")\nREFERENCES \"public\".\"document\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"documentCandidate_documentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentCandidate_documentId_fkey",
+          "public",
+          "\"public\".\"documentCandidate\""
+        ]
+      }
+    ]
+  }
+]
