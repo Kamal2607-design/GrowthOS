@@ -6,6 +6,7 @@ import {
 
 const DEFAULT_LIMIT = 5;
 const MAX_LIMIT = 20;
+const DEFAULT_SIMILARITY_THRESHOLD = 0.55;
 
 export async function searchMemories(
   userId,
@@ -118,8 +119,15 @@ export async function searchMemories(
   const results =
     await db.runtime().query(plan);
 
+  const filteredResults =
+  results.filter(
+    (result) =>
+      result.similarity >=
+      DEFAULT_SIMILARITY_THRESHOLD
+  );
+
   return {
     query: normalizedQuery,
-    results,
+    results: filteredResults,
   };
 }
