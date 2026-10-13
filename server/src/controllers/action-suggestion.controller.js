@@ -251,6 +251,18 @@ export async function acceptCurrentUserActionSuggestion(
     }
 
     if (
+      error.message ===
+      'DUPLICATE_ACTIVE_ACTION'
+    ) {
+      return res.status(409).json({
+        success: false,
+        error: 'DUPLICATE_ACTIVE_ACTION',
+        message:
+          'An active action with the same title already exists.',
+      });
+    }
+
+    if (
       error.message === 'SUGGESTION_NOT_PENDING'
     ) {
       return res.status(400).json({

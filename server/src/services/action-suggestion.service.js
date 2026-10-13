@@ -12,6 +12,51 @@ const VALID_SOURCES = [
   'manual',
 ];
 
+async function findActiveDuplicateAction(
+  tx,
+  userId,
+  suggestion
+) {
+  const actions =
+    await tx.orm.public.Action
+      .where({
+        userId,
+      })
+      .all();
+
+  const normalizedSuggestionTitle =
+    suggestion.title
+      .trim()
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, '')
+      .replace(/\s+/g, ' ');
+
+  const duplicateAction =
+    actions.find((action) => {
+      if (
+        !['pending', 'in_progress'].includes(
+          action.status
+        )
+      ) {
+        return false;
+      }
+
+      const normalizedActionTitle =
+        action.title
+          .trim()
+          .toLowerCase()
+          .replace(/[^\p{L}\p{N}\s]/gu, '')
+          .replace(/\s+/g, ' ');
+
+      return (
+        normalizedActionTitle ===
+        normalizedSuggestionTitle
+      );
+    });
+
+  return duplicateAction || null;
+}
+
 async function verifyGoalOwnership(userId, goalId) {
   if (goalId === null || goalId === undefined) {
     return;
@@ -198,49 +243,71 @@ export async function acceptActionSuggestion(
   userId,
   suggestionId
 ) {
-  const suggestion =
-    await db.orm.public.ActionSuggestion.first({
-      id: suggestionId,
-      userId,
-    });
-
-  if (!suggestion) {
-    throw new Error('SUGGESTION_NOT_FOUND');
+  if (!Number.isInteger(suggestionId)) {
+    throw new Error('INVALID_SUGGESTION_ID');
   }
 
-  if (suggestion.status !== 'pending') {
-    throw new Error('SUGGESTION_NOT_PENDING');
-  }
-
-  // Create the real Action from the suggestion.
-  const action =
-    await db.orm.public.Action.create({
-      userId,
-      goalId: suggestion.goalId,
-      suggestionId: suggestion.id,
-      title: suggestion.title,
-      description: suggestion.description,
-      status: 'pending',
-      priority: suggestion.priority,
-      dueDate: null,
-      completedAt: null,
-    });
-
-  // Mark the suggestion as accepted.
-  const updatedSuggestion =
-    await db.orm.public.ActionSuggestion
-      .where({
-        id: suggestion.id,
+  return await db.transaction(async (tx) => {
+    const suggestion =
+      await tx.orm.public.ActionSuggestion.first({
+        id: suggestionId,
         userId,
-      })
-      .update({
-        status: 'accepted',
       });
 
-  return {
-    suggestion: updatedSuggestion,
-    action,
-  };
+    if (!suggestion) {
+      throw new Error('SUGGESTION_NOT_FOUND');
+    }
+
+    if (suggestion.status !== 'pending') {
+      throw new Error('SUGGESTION_NOT_PENDING');
+    }
+
+    const duplicateAction =
+      await findActiveDuplicateAction(
+        tx,
+        userId,
+        suggestion
+      );
+
+    if (duplicateAction) {
+      throw new Error(
+        'DUPLICATE_ACTIVE_ACTION'
+      );
+    }
+
+    const updatedSuggestion =
+      await tx.orm.public.ActionSuggestion
+        .where({
+          id: suggestionId,
+          userId,
+          status: 'pending',
+        })
+        .update({
+          status: 'accepted',
+        });
+
+    if (!updatedSuggestion) {
+      throw new Error('SUGGESTION_NOT_PENDING');
+    }
+
+    const action =
+      await tx.orm.public.Action.create({
+        userId,
+        goalId: suggestion.goalId,
+        suggestionId: suggestion.id,
+        title: suggestion.title,
+        description: suggestion.description,
+        status: 'pending',
+        priority: suggestion.priority,
+        dueDate: null,
+        completedAt: null,
+      });
+
+    return {
+      suggestion: updatedSuggestion,
+      action,
+    };
+  });
 }
 
 export async function rejectActionSuggestion(

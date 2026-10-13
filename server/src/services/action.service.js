@@ -335,7 +335,7 @@ export async function updateActionStatus(
   };
 
   if (status === 'completed') {
-    updateData.completedAt = new Date();
+    updateData.completedAt = Temporal.Now.instant();
   } else {
     updateData.completedAt = null;
   }
