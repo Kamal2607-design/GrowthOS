@@ -18,6 +18,8 @@ import memoryRetrievalRoutes from './routes/memory-retrieval.routes.js';
 import contextAssemblyRoutes from './routes/context-assembly.routes.js';
 import ragRoutes from './routes/rag.routes.js';
 import actionPlannerRoutes from './routes/action-planner.routes.js';
+import dailyGrowthLoopRoutes
+  from './routes/daily-growth-loop.routes.js';
 
 const app = express();
 
@@ -73,4 +75,9 @@ app.use(
   '/api/action-planner',
   actionPlannerRoutes
 );
+app.use(
+  '/api/daily-growth',
+  dailyGrowthLoopRoutes
+);
+
 export default app;
