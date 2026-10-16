@@ -4,7 +4,10 @@ const OLLAMA_BASE_URL =
 const OLLAMA_MODEL =
   process.env.OLLAMA_MODEL || 'qwen3:4b';
 
-export async function generateWithQwen(prompt) {
+export async function generateWithQwen(
+  prompt,
+  { format = 'json' } = {}
+) {
   const response = await fetch(
     `${OLLAMA_BASE_URL}/api/generate`,
     {
@@ -16,7 +19,7 @@ export async function generateWithQwen(prompt) {
         model: OLLAMA_MODEL,
         prompt,
         think: false,
-        format: "json",
+        format,
         stream: false,
       }),
     }
@@ -31,6 +34,12 @@ export async function generateWithQwen(prompt) {
   }
 
   const data = await response.json();
+
+  if (typeof data.response !== 'string') {
+    throw new Error(
+      'OLLAMA_INVALID_RESPONSE: response must be a string.'
+    );
+  }
 
   return {
     response: data.response,
