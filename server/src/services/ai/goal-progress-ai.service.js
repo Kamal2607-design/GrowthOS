@@ -1,8 +1,71 @@
+
 import { generateWithQwen } from './qwen.service.js';
 
 import {
   buildGoalProgressPrompt,
 } from './goal-progress-prompt.service.js';
+
+const goalProgressSchema = {
+  type: 'object',
+  properties: {
+    summary: {
+      type: 'string',
+    },
+    progressLevel: {
+      type: 'string',
+      enum: [
+        'not_started',
+        'low',
+        'moderate',
+        'good',
+        'excellent',
+      ],
+    },
+    trend: {
+      type: 'string',
+      enum: [
+        'improving',
+        'stable',
+        'declining',
+        'insufficient_data',
+      ],
+    },
+    strengths: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    blockers: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    reflectionInsights: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    recommendations: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          reason: { type: 'string' },
+        },
+        required: ['title', 'reason'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: [
+    'summary',
+    'progressLevel',
+    'trend',
+    'strengths',
+    'blockers',
+    'reflectionInsights',
+    'recommendations',
+  ],
+  additionalProperties: false,
+};
 
 export async function analyzeGoalProgress({
   goal,
@@ -10,25 +73,22 @@ export async function analyzeGoalProgress({
   activity,
   reflectionCorrelation,
 }) {
-  const prompt =
-    buildGoalProgressPrompt({
-      goal,
-      progress,
-      activity,
-      reflectionCorrelation,
-    });
+  const prompt = buildGoalProgressPrompt({
+    goal,
+    progress,
+    activity,
+    reflectionCorrelation,
+  });
 
   console.log(
     'Sending goal progress analysis prompt to Qwen...'
   );
 
-  const result =
-    await generateWithQwen(prompt);
+  const result = await generateWithQwen(prompt, {
+    format: goalProgressSchema,
+  });
 
-  console.log(
-    'Qwen goal progress response:'
-  );
-
+  console.log('Qwen goal progress response:');
   console.log(result.response);
 
   let parsed;
@@ -41,31 +101,30 @@ export async function analyzeGoalProgress({
       error
     );
 
-    console.error(
-      'Raw Qwen response:',
-      result.response
-    );
-
     throw new Error(
       'Qwen returned an invalid goal progress analysis JSON response.'
     );
   }
 
-    if (!parsed || typeof parsed !== 'object') {
-        throw new Error(
-            'Qwen returned an empty goal progress analysis.'
-        );
-        }
+  if (
+    !parsed ||
+    typeof parsed !== 'object' ||
+    Array.isArray(parsed)
+  ) {
+    throw new Error(
+      'Qwen returned an empty or invalid goal progress analysis.'
+    );
+  }
 
-        if (
-        parsed.id !== undefined &&
-        parsed.title !== undefined &&
-        parsed.summary === undefined
-        ) {
-        throw new Error(
-            'Qwen returned the goal object instead of a goal progress analysis.'
-        );
-    }
+  if (
+    parsed.id !== undefined &&
+    parsed.title !== undefined &&
+    parsed.summary === undefined
+  ) {
+    throw new Error(
+      'Qwen returned the goal object instead of a goal progress analysis.'
+    );
+  }
 
   if (
     typeof parsed.summary !== 'string' ||
@@ -84,11 +143,7 @@ export async function analyzeGoalProgress({
     'excellent',
   ];
 
-  if (
-    !validProgressLevels.includes(
-      parsed.progressLevel
-    )
-  ) {
+  if (!validProgressLevels.includes(parsed.progressLevel)) {
     throw new Error(
       'Qwen returned an invalid goal progress level.'
     );
@@ -101,30 +156,29 @@ export async function analyzeGoalProgress({
     'insufficient_data',
   ];
 
-  if (
-    !validTrends.includes(parsed.trend)
-  ) {
+  if (!validTrends.includes(parsed.trend)) {
     throw new Error(
       'Qwen returned an invalid goal progress trend.'
     );
   }
 
-  if (!Array.isArray(parsed.strengths)) {
-    throw new Error(
-      'Qwen goal progress strengths must be an array.'
-    );
-  }
-
-  if (!Array.isArray(parsed.blockers)) {
-    throw new Error(
-      'Qwen goal progress blockers must be an array.'
-    );
-  }
-
-  if (!Array.isArray(parsed.reflectionInsights)) {
-    throw new Error(
-      'Qwen goal progress reflectionInsights must be an array.'
-    );
+  for (const field of [
+    'strengths',
+    'blockers',
+    'reflectionInsights',
+  ]) {
+    if (
+      !Array.isArray(parsed[field]) ||
+      !parsed[field].every(
+        (item) =>
+          typeof item === 'string' &&
+          item.trim().length > 0
+      )
+    ) {
+      throw new Error(
+        `Qwen goal progress ${field} must be an array of non-empty strings.`
+      );
+    }
   }
 
   if (!Array.isArray(parsed.recommendations)) {
@@ -133,73 +187,38 @@ export async function analyzeGoalProgress({
     );
   }
 
-  const recommendations =
-    parsed.recommendations.map(
-      (recommendation) => {
-        if (
-          !recommendation ||
-          typeof recommendation !== 'object'
-        ) {
-          throw new Error(
-            'Qwen returned an invalid goal recommendation.'
-          );
-        }
-
-        if (
-          typeof recommendation.title !== 'string' ||
-          !recommendation.title.trim()
-        ) {
-          throw new Error(
-            'Qwen goal recommendation title is invalid.'
-          );
-        }
-
-        if (
-          typeof recommendation.reason !== 'string' ||
-          !recommendation.reason.trim()
-        ) {
-          throw new Error(
-            'Qwen goal recommendation reason is invalid.'
-          );
-        }
-
-        return {
-          title: recommendation.title.trim(),
-          reason: recommendation.reason.trim(),
-        };
+  const recommendations = parsed.recommendations.map(
+    (recommendation) => {
+      if (
+        !recommendation ||
+        typeof recommendation !== 'object' ||
+        Array.isArray(recommendation) ||
+        typeof recommendation.title !== 'string' ||
+        !recommendation.title.trim() ||
+        typeof recommendation.reason !== 'string' ||
+        !recommendation.reason.trim()
+      ) {
+        throw new Error(
+          'Qwen returned an invalid goal recommendation.'
+        );
       }
-    );
+
+      return {
+        title: recommendation.title.trim(),
+        reason: recommendation.reason.trim(),
+      };
+    }
+  );
 
   return {
     summary: parsed.summary.trim(),
-
-    progressLevel:
-      parsed.progressLevel,
-
-    trend:
-      parsed.trend,
-
-    strengths:
-      parsed.strengths.filter(
-        (item) =>
-          typeof item === 'string' &&
-          item.trim()
-      ),
-
-    blockers:
-      parsed.blockers.filter(
-        (item) =>
-          typeof item === 'string' &&
-          item.trim()
-      ),
-
-    reflectionInsights:
-      parsed.reflectionInsights.filter(
-        (item) =>
-          typeof item === 'string' &&
-          item.trim()
-      ),
-
+    progressLevel: parsed.progressLevel,
+    trend: parsed.trend,
+    strengths: parsed.strengths.map((item) => item.trim()),
+    blockers: parsed.blockers.map((item) => item.trim()),
+    reflectionInsights: parsed.reflectionInsights.map(
+      (item) => item.trim()
+    ),
     recommendations,
   };
 }
