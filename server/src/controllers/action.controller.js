@@ -19,7 +19,7 @@ export async function createCurrentUserAction(req, res) {
       status,
       priority,
       dueDate,
-    } = req.body;
+    } = req.body ?? {};
 
     if (!title || !title.trim()) {
       return res.status(400).json({
@@ -360,7 +360,7 @@ export async function updateActionStatusController(
     const actionId =
       Number(req.params.id);
 
-    const { status } = req.body;
+    const { status } = req.body ?? {};
 
     if (!Number.isInteger(actionId)) {
       return res.status(400).json({

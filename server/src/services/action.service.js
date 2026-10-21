@@ -40,6 +40,7 @@ async function verifyGoalOwnership(userId, goalId) {
 }
 
 async function verifySuggestionOwnership(
+  client,
   userId,
   suggestionId
 ) {
@@ -51,7 +52,7 @@ async function verifySuggestionOwnership(
   }
 
   const suggestion =
-    await db.orm.public.ActionSuggestion.first({
+    await client.orm.public.ActionSuggestion.first({
       id: suggestionId,
       userId,
     });
@@ -102,11 +103,6 @@ export async function createAction(
 
   await verifyGoalOwnership(userId, goalId);
 
-  await verifySuggestionOwnership(
-    userId,
-    suggestionId
-  );
-
   let parsedDueDate = null;
 
   if (dueDate !== undefined && dueDate !== null) {
@@ -117,7 +113,7 @@ export async function createAction(
     }
   }
 
-  const action = await db.orm.public.Action.create({
+  const actionData = {
     userId,
     goalId: goalId ?? null,
     suggestionId: suggestionId ?? null,
@@ -128,9 +124,51 @@ export async function createAction(
     dueDate: parsedDueDate,
     completedAt: null,
     sourceCandidateId
-  });
+  };
 
-  return action;
+  if (
+    suggestionId === undefined ||
+    suggestionId === null
+  ) {
+    const action =
+      await db.orm.public.Action.create(actionData);
+
+    return action;
+  }
+
+  /*
+   * Creating an Action from a suggestion accepts that
+   * suggestion. Claim it and create the Action in one
+   * transaction so it cannot stay pending, be accepted
+   * twice, or be accepted while it is being rejected.
+   */
+  return db.transaction(async (tx) => {
+    await verifySuggestionOwnership(
+      tx,
+      userId,
+      suggestionId
+    );
+
+    const [acceptedSuggestion] =
+      await tx.orm.public.ActionSuggestion
+        .where({
+          id: suggestionId,
+          userId,
+          status: 'pending',
+        })
+        .updateAll({
+          status: 'accepted',
+        });
+
+    if (!acceptedSuggestion) {
+      throw new Error('SUGGESTION_NOT_PENDING');
+    }
+
+    const action =
+      await tx.orm.public.Action.create(actionData);
+
+    return action;
+  });
 }
 
 export async function getActions(

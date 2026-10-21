@@ -9,10 +9,14 @@ import {
   handleGoogleCallback,
 } from '../services/google-oauth.service.js';
 import {db} from '../prisma/db.ts';
+import {
+  setAuthCookie,
+  clearAuthCookie,
+} from '../config/auth-cookie.js';
 
 export async function register(req, res) {
   try {
-    const { email, password, name, username } = req.body;
+    const { email, password, name, username } = req.body ?? {};
 
     if (!email || !password) {
       return res.status(400).json({
@@ -59,7 +63,7 @@ export async function register(req, res) {
 
 export async function login(req, res) {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body ?? {};
 
     if (!email || !password) {
       return res.status(400).json({
@@ -72,17 +76,7 @@ export async function login(req, res) {
       email,
       password,
     });
-    res.cookie(
-  process.env.JWT_COOKIE_NAME || 'growthos_tokennn',
-  result.token,
-  {
-    httpOnly: true,
-    secure: process.env.JWT_COOKIE_SECURE === 'true',
-    sameSite: process.env.JWT_COOKIE_SAME_SITE || 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: '/',
-  }
-);
+    setAuthCookie(res, result.token);
     return res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -147,15 +141,7 @@ export async function getCurrentUser(req, res) {
 
 export async function logout(req, res) {
   try {
-    res.clearCookie(
-      process.env.JWT_COOKIE_NAME || 'growthos_token',
-      {
-        httpOnly: true,
-        secure: process.env.JWT_COOKIE_SECURE === 'true',
-        sameSite: process.env.JWT_COOKIE_SAME_SITE || 'lax',
-        path: '/',
-      }
-    );
+    clearAuthCookie(res);
 
     return res.status(200).json({
       success: true,
@@ -171,6 +157,25 @@ export async function logout(req, res) {
   }
 }
 
+// When CLIENT_APP_URL is set (the browser app), Google sign-in sends the
+// user back to it instead of returning JSON.
+function getClientAppUrl() {
+  return process.env.CLIENT_APP_URL?.trim().replace(/\/+$/, '') || null;
+}
+
+function googleAuthFailed(res, status, message) {
+  const clientAppUrl = getClientAppUrl();
+
+  if (clientAppUrl) {
+    return res.redirect(`${clientAppUrl}/sign-in?error=google`);
+  }
+
+  return res.status(status).json({
+    success: false,
+    message,
+  });
+}
+
 export async function googleCallback(req, res) {
   try {
     const state = req.cookies.google_oauth_state;
@@ -179,10 +184,7 @@ export async function googleCallback(req, res) {
       req.cookies.google_oauth_code_verifier;
 
     if (!state || !nonce || !codeVerifier) {
-      return res.status(400).json({
-        success: false,
-        message: 'Google OAuth session expired or is invalid',
-      });
+      return googleAuthFailed(res, 400, 'Google OAuth session expired or is invalid');
     }
 
     const callbackUrl = new URL(
@@ -197,10 +199,7 @@ export async function googleCallback(req, res) {
     });
 
     if (!claims) {
-      return res.status(400).json({
-        success: false,
-        message: 'Unable to retrieve Google account information',
-      });
+      return googleAuthFailed(res, 400, 'Unable to retrieve Google account information');
     }
 
     const googleUser = {
@@ -211,24 +210,15 @@ export async function googleCallback(req, res) {
     };
 
     if (!googleUser.providerAccountId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Google account ID was not provided',
-      });
+      return googleAuthFailed(res, 400, 'Google account ID was not provided');
     }
 
     if (!googleUser.email) {
-      return res.status(400).json({
-        success: false,
-        message: 'Google account email was not provided',
-      });
+      return googleAuthFailed(res, 400, 'Google account email was not provided');
     }
 
     if (googleUser.emailVerified !== true) {
-      return res.status(400).json({
-        success: false,
-        message: 'Google email is not verified',
-      });
+      return googleAuthFailed(res, 400, 'Google email is not verified');
     }
 
     const user = await loginOrCreateGoogleUser({
@@ -239,17 +229,7 @@ export async function googleCallback(req, res) {
 
     const token = createAuthToken(user);
 
-    res.cookie(
-      process.env.JWT_COOKIE_NAME || 'growthos_token',
-      token,
-      {
-        httpOnly: true,
-        secure: process.env.JWT_COOKIE_SECURE === 'true',
-        sameSite: process.env.JWT_COOKIE_SAME_SITE || 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        path: '/',
-      }
-    );
+    setAuthCookie(res, token);
 
     // OAuth transaction cookies are no longer needed.
     res.clearCookie('google_oauth_state', {
@@ -264,6 +244,12 @@ export async function googleCallback(req, res) {
       path: '/api/auth/google',
     });
 
+    const clientAppUrl = getClientAppUrl();
+
+    if (clientAppUrl) {
+      return res.redirect(`${clientAppUrl}/`);
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Google authentication successful',
@@ -277,9 +263,6 @@ export async function googleCallback(req, res) {
   } catch (error) {
     console.error('Google OAuth callback error:', error);
 
-    return res.status(401).json({
-      success: false,
-      message: 'Google authentication failed',
-    });
+    return googleAuthFailed(res, 401, 'Google authentication failed');
   }
 }
