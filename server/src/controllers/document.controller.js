@@ -1,5 +1,6 @@
 import {
   createDocument,
+  uploadDocument,
   getDocuments,
   getDocumentById,
   getDocumentText,
@@ -24,6 +25,131 @@ import {
   analyzeDocumentAndStore,
   getDocumentAnalysis
 } from '../services/document-understanding.service.js';
+
+import {
+  SUPPORTED_DOCUMENT_TYPES,
+  getMaxDocumentUploadBytes,
+} from '../services/document-storage.service.js';
+
+const SUPPORTED_TYPES_TEXT =
+  Object.keys(SUPPORTED_DOCUMENT_TYPES).join(', ');
+
+const STORAGE_PATH_ERRORS = {
+  DOCUMENT_FILE_OUTSIDE_STORAGE:
+    'File path must point to a file uploaded with POST /api/documents/upload',
+  DOCUMENT_FILE_MISSING:
+    'File not found in document storage',
+};
+
+
+/*
+ * POST /api/documents/upload
+ *
+ * The file is the raw request body. Content-Type is the
+ * document type; X-File-Name (URL-encoded) is the display name.
+ * The server chooses where the file is stored.
+ */
+export async function uploadCurrentUserDocument(
+  req,
+  res
+) {
+  try {
+    const userId = req.user.id;
+
+    if (!Buffer.isBuffer(req.body)) {
+      return res.status(415).json({
+        success: false,
+        message:
+          `Send the file as the raw request body with Content-Type: ${SUPPORTED_TYPES_TEXT}`,
+      });
+    }
+
+    const mimeType =
+      (req.get('content-type') || '')
+        .split(';')[0]
+        .trim()
+        .toLowerCase();
+
+    const document =
+      await uploadDocument(
+        userId,
+        {
+          fileName:
+            req.get('x-file-name'),
+          mimeType,
+          buffer: req.body,
+        }
+      );
+
+    return res.status(201).json({
+      success: true,
+      message:
+        'Document uploaded successfully',
+      document,
+    });
+
+  } catch (error) {
+    console.error(
+      'Upload document error:',
+      error
+    );
+
+    const clientErrors = {
+      DOCUMENT_FILE_NAME_REQUIRED:
+        'X-File-Name header is required',
+      DOCUMENT_FILE_EMPTY:
+        'Uploaded file is empty',
+      DOCUMENT_CONTENT_TYPE_MISMATCH:
+        'File content does not match its Content-Type',
+    };
+
+    if (clientErrors[error.message]) {
+      return res.status(400).json({
+        success: false,
+        message: clientErrors[error.message],
+      });
+    }
+
+    if (
+      error.message ===
+      'UNSUPPORTED_DOCUMENT_TYPE'
+    ) {
+      return res.status(415).json({
+        success: false,
+        message:
+          `Supported types: ${SUPPORTED_TYPES_TEXT}`,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message:
+        'Failed to upload document',
+    });
+  }
+}
+
+
+// Error handler for the upload body parser.
+export function handleDocumentUploadError(
+  error,
+  req,
+  res,
+  next
+) {
+  if (error?.type === 'entity.too.large') {
+    const limitMb =
+      getMaxDocumentUploadBytes() / (1024 * 1024);
+
+    return res.status(413).json({
+      success: false,
+      message:
+        `File exceeds the ${limitMb} MB upload limit`,
+    });
+  }
+
+  return next(error);
+}
 
 
 export async function createCurrentUserDocument(
@@ -105,6 +231,14 @@ export async function createCurrentUserDocument(
       return res.status(400).json({
         success: false,
         message: 'Invalid file size',
+      });
+    }
+
+    if (STORAGE_PATH_ERRORS[error.message]) {
+      return res.status(400).json({
+        success: false,
+        message:
+          STORAGE_PATH_ERRORS[error.message],
       });
     }
 
@@ -308,6 +442,28 @@ export async function extractCurrentUserDocument(
     message:
         'This document type is not supported yet',
     });
+
+    if (
+      error.message ===
+      'DOCUMENT_FILE_OUTSIDE_STORAGE'
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          'This document was registered with a path outside server storage. Upload it again with POST /api/documents/upload.',
+      });
+    }
+
+    if (
+      error.message ===
+      'DOCUMENT_FILE_MISSING'
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          'The stored file for this document is missing. Upload it again.',
+      });
+    }
 
     return res.status(500).json({
       success: false,

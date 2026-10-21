@@ -2,6 +2,8 @@ import express from 'express';
 
 import {
   createCurrentUserDocument,
+  uploadCurrentUserDocument,
+  handleDocumentUploadError,
   getCurrentUserDocuments,
   getCurrentUserDocument,
   getCurrentUserDocumentText,
@@ -25,6 +27,11 @@ import {
   authenticate,
 } from '../middleware/auth.middleware.js';
 
+import {
+  SUPPORTED_DOCUMENT_TYPES,
+  getMaxDocumentUploadBytes,
+} from '../services/document-storage.service.js';
+
 const router = express.Router();
 
 router.use(authenticate);
@@ -32,6 +39,17 @@ router.use(authenticate);
 router.post(
   '/',
   createCurrentUserDocument
+);
+
+// Parsed only after authentication (router.use above).
+router.post(
+  '/upload',
+  express.raw({
+    type: Object.keys(SUPPORTED_DOCUMENT_TYPES),
+    limit: getMaxDocumentUploadBytes(),
+  }),
+  uploadCurrentUserDocument,
+  handleDocumentUploadError
 );
 
 router.get(
