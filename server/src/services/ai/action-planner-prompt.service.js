@@ -30,7 +30,9 @@ Future Self: ${vision.futureSelf}
               }`
           )
           .join('\n')
-      : 'No relevant memories found.';
+      : context.memoryStatus === 'unavailable'
+        ? 'Memory retrieval is unavailable. Do not assume no relevant memories exist.'
+        : 'No relevant memories found.';
 
   const goalContext =
     goals.length > 0

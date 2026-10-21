@@ -113,7 +113,12 @@ export async function getReflections(
       .where(filter)
       .all();
 
-  return reflections;
+  // Newest first, so callers get the most recent reflections.
+  return [...reflections].sort(
+    (a, b) =>
+      new Date(String(b.reflectionDate)).getTime() -
+      new Date(String(a.reflectionDate)).getTime()
+  );
 }
 
 export async function getReflectionById(
