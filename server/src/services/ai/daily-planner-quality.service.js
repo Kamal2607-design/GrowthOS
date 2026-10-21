@@ -108,6 +108,20 @@ function tokenOverlapRatio(left, right) {
   return intersection / shorterSize;
 }
 
+// Filler words carry no task meaning ("Complete a short task" vs
+// "Complete one task"), so they are ignored when measuring overlap.
+const COMPARISON_STOP_WORDS = new Set([
+  'a', 'an', 'the', 'one', 'some', 'my', 'your', 'for', 'to', 'of',
+  'on', 'in', 'at', 'and', 'with', 'today', 'tomorrow', 'short', 'quick',
+  'small', 'specific',
+]);
+
+function comparisonTokens(value) {
+  return new Set(
+    tokenize(value).filter((token) => !COMPARISON_STOP_WORDS.has(token))
+  );
+}
+
 export function areExactTitleDuplicates(left, right) {
   return normalizeText(left) === normalizeText(right);
 }
@@ -129,8 +143,8 @@ export function areLikelyDuplicateTitles(left, right) {
     return false;
   }
 
-  const leftTokens = new Set(tokenize(left));
-  const rightTokens = new Set(tokenize(right));
+  const leftTokens = comparisonTokens(left);
+  const rightTokens = comparisonTokens(right);
 
   const shorterTokens =
     leftTokens.size <= rightTokens.size

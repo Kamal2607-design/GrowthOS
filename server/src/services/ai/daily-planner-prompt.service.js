@@ -1,3 +1,50 @@
+import {
+  isPlaceholderGoal,
+} from './daily-planner-goal-relevance.service.js';
+
+// Plain-language reasons the validator rejected a previous plan.
+const REJECTION_REASONS = {
+  DUPLICATE_EXISTING_ACTION:
+    'it repeated an action the user already has pending or in progress',
+  DUPLICATE_PENDING_SUGGESTION:
+    'it repeated a suggestion that is already pending',
+  DUPLICATE_GENERATED_SUGGESTION:
+    'it contained two suggestions that were the same task',
+  DAILY_PLANNER_GOAL_IS_PLACEHOLDER:
+    'it assigned a suggestion to a test/placeholder goal',
+  DAILY_PLANNER_GOAL_MISMATCH:
+    'it assigned a suggestion to a goal the task does not support',
+  DAILY_PLANNER_UNSUPPORTED_REFLECTION_CLAIM:
+    'it claimed a reflection from today exists when none was recorded',
+  DAILY_PLANNER_GOAL_NOT_ACTIVE_IN_CONTEXT:
+    'it used a Goal ID that is not in ACTIVE GOALS',
+  INVALID_DAILY_PLANNER_GOAL_REFERENCE:
+    'it used a Goal ID that is not in ACTIVE GOALS',
+};
+
+export function describePlannerRejection(code) {
+  return (
+    REJECTION_REASONS[code] ??
+    'the JSON did not follow the required structure and rules'
+  );
+}
+
+function buildPreviousAttemptContext(previousAttempt) {
+  if (!previousAttempt) {
+    return '';
+  }
+
+  const rejectedTitle = previousAttempt.rejectedTitle
+    ? `\nRejected suggestion: "${previousAttempt.rejectedTitle}"`
+    : '';
+
+  return `
+PREVIOUS ATTEMPT REJECTED:
+Your previous plan was rejected by the GrowthOS validator because ${describePlannerRejection(previousAttempt.code)}.${rejectedTitle}
+Return a different plan that follows every rule. Do not repeat the rejected suggestion or anything similar to it.
+`;
+}
+
 export function buildDailyPlannerPrompt(context) {
   if (!context || typeof context !== 'object') {
     throw new Error('DAILY_PLANNER_CONTEXT_REQUIRED');
@@ -15,6 +62,7 @@ export function buildDailyPlannerPrompt(context) {
     relevantMemories = [],
     goalProgress = [],
     dataQuality = {},
+    previousAttempt = null,
   } = context;
 
   const visionContext = vision
@@ -33,7 +81,12 @@ Future Self: ${vision.futureSelf ?? 'None'}
 Title: ${goal.title}
 Description: ${goal.description || 'None'}
 Priority: ${goal.priority}
-Target Date: ${goal.targetDate || 'None'}`,
+Target Date: ${goal.targetDate || 'None'}${
+            isPlaceholderGoal(goal)
+              ? `
+Planning status: Test/placeholder goal. Do not assign suggestions to this goal.`
+              : ''
+          }`,
         )
         .join('\n\n')
     : 'No active goals found.';
@@ -128,7 +181,9 @@ Highlights: ${reflection.highlights || 'None'}
 Challenges: ${reflection.challenges || 'None'}
 Learnings: ${reflection.learnings || 'None'}
 `
-    : 'No reflection has been recorded today.';
+    : `No reflection has been recorded today.
+Do not claim, quote, or imply that the user reflected, reported,
+or wrote anything today.`;
 
   const reflectionAnalysisContext = reflectionAnalysis
     ? `
@@ -155,13 +210,16 @@ ${JSON.stringify(reflectionAnalysis.recommendedActions ?? [])}
     : 'No reflection analysis is available.';
 
   const memoryContext = relevantMemories.length > 0
-    ? relevantMemories
-        .map(
-          (memory) => `Memory ID: ${memory.memoryId}
+    ? `These memories are historical context. They are not today's
+reflection and not evidence of anything done today.
+
+${relevantMemories
+  .map(
+    (memory) => `Memory ID: ${memory.memoryId}
 Similarity: ${memory.similarity ?? 'Unknown'}
 Content: ${memory.content}`,
-        )
-        .join('\n\n')
+  )
+  .join('\n\n')}`
     : dataQuality.memoryStatus === 'unavailable'
       ? 'Memory retrieval is unavailable. Relevant memories are unknown.'
       : 'No relevant memories were retrieved.';
@@ -184,6 +242,22 @@ Reflection correlation: ${JSON.stringify(
         })
         .join('\n\n')
     : 'No goal progress data is available for this planning request.';
+
+  // Small models tend to copy listed tasks back as "suggestions", so the
+  // titles are repeated as an explicit exclusion list right before the
+  // output instructions, where the model attends most.
+  const alreadyPlannedTitles = [
+    ...(currentActions.pending ?? []),
+    ...(currentActions.inProgress ?? []),
+    ...(currentActions.overdue ?? []),
+    ...pendingSuggestions,
+  ]
+    .map((item) => item.title)
+    .filter((title, index, titles) => title && titles.indexOf(title) === index);
+
+  const alreadyPlannedContext = alreadyPlannedTitles.length > 0
+    ? alreadyPlannedTitles.map((title) => `- ${title}`).join('\n')
+    : '- (nothing yet)';
 
   const dataAvailabilityContext = `
 Memory retrieval status: ${dataQuality.memoryStatus ?? 'unknown'}
@@ -213,10 +287,10 @@ ${visionContext}
 ACTIVE GOALS:
 ${goalContext}
 
-CURRENT ACTIONS:
+CURRENT ACTIONS (already on the user's list; never suggest these again):
 ${actionContext}
 
-EXISTING PENDING SUGGESTIONS:
+EXISTING PENDING SUGGESTIONS (already proposed; never suggest these again):
 ${pendingSuggestionContext}
 
 TODAY'S REFLECTION:
@@ -233,7 +307,7 @@ ${goalProgressContext}
 
 DATA AVAILABILITY:
 ${dataAvailabilityContext}
-
+${buildPreviousAttemptContext(previousAttempt)}
 IMPORTANT RULES:
 
 1. Ground every suggestion strictly in the supplied context.
@@ -349,6 +423,24 @@ I. Before returning the plan, compare every proposed suggestion
 J. If the context does not support enough distinct, useful
    suggestions, return fewer suggestions rather than inventing
    facts or repeating tasks.
+
+K. Never assign a suggestion to a goal marked
+   "Planning status: Test/placeholder goal". Use the meaningful
+   active goal the task clearly supports, or goalId: null.
+
+L. If TODAY'S REFLECTION says no reflection has been recorded,
+   never write that the user reflected, reported, noted, or
+   completed anything today. Never cite "today's reflection".
+   A relevant memory is historical and must not be presented
+   as today's reflection or as proof of a same-day activity.
+
+ALREADY PLANNED. DO NOT SUGGEST ANY OF THESE OR A REWORDING OF THEM:
+${alreadyPlannedContext}
+
+Every suggestion must be a NEW task that is not in the list above.
+If an existing task matters most, do not repeat it: suggest a different,
+complementary next step (for example preparation, review, or the step
+after it), or return fewer suggestions.
 
 28. Return ONLY valid JSON.
 

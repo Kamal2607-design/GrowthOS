@@ -6,9 +6,6 @@ import {
   buildDailyPlannerPrompt,
 } from './daily-planner-prompt.service.js';
 
-import {
-  validateDailyPlannerSuggestions,
-} from './daily-planner-validation.service.js';
 
 function parseQwenJson(response) {
   if (!response) {
@@ -158,7 +155,12 @@ export async function generateDailyActionPlan(
     );
 
   const result =
-    await generateWithQwen(prompt);
+    // Plain JSON mode: measured with qwen3:4b, a JSON-schema format made
+    // the model copy existing tasks far more often. The token cap stops
+    // runaway output (a truncated reply fails validation and is retried).
+    await generateWithQwen(prompt, {
+      maxTokens: 1024,
+    });
 
   console.log(
     'Qwen Daily Planner Response:',
@@ -170,16 +172,11 @@ export async function generateDailyActionPlan(
     result.response
   );
 
-  const validated =
-  validateDailyPlannerResponse(
+  // Structural checks only. Context rules (duplicates, goal relevance,
+  // grounding) are applied by the generation service, which can drop
+  // repeats and retry.
+  return validateDailyPlannerResponse(
     parsed,
     context
   );
-
-  validateDailyPlannerSuggestions(
-  validated.suggestions,
-  context
-);
-
-return validated;
 }
