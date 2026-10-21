@@ -18,29 +18,43 @@ import {
   persistDailyActionSuggestions,
 } from './daily-planner-persistence.service.js';
 
+import {
+  buildDailyPlannerIntelligenceContext,
+} from './daily-planner-intelligence-context.service.js';
 
 export async function generateDailyGrowthSuggestions(userId) {
   if (!Number.isInteger(userId) || userId <= 0) {
     throw new Error('INVALID_USER_ID');
   }
 
-  // 1. Build the canonical daily context.
   const dailyContext =
     await getTodayDailyContext(userId);
 
-  // 2. Reduce it to the AI planner context.
   const plannerContext =
     buildDailyPlannerContext(dailyContext);
 
-  // 3. Ask Qwen to generate candidate suggestions.
-  const plan =
-    await generateDailyActionPlan(plannerContext);
+  const intelligenceContext =
+    await buildDailyPlannerIntelligenceContext(
+      userId,
+      plannerContext,
+    );
 
-  // 4. Validate against the current planner context.
+  const enrichedPlannerContext = {
+    ...plannerContext,
+    ...intelligenceContext,
+  };
+  console.log('Daily planner intelligence summary:', {
+  relevantMemoryCount: enrichedPlannerContext.relevantMemories.length,
+  goalProgressCount: enrichedPlannerContext.goalProgress.length,
+  dataQuality: enrichedPlannerContext.dataQuality,
+});
+  const plan =
+    await generateDailyActionPlan(enrichedPlannerContext);
+
   const validatedSuggestions =
     validateDailyPlannerSuggestions(
       plan.suggestions,
-      plannerContext
+      enrichedPlannerContext,
     );
 
   const validatedPlan = {
@@ -48,10 +62,9 @@ export async function generateDailyGrowthSuggestions(userId) {
     suggestions: validatedSuggestions,
   };
 
-  // 5. Persist only after every validation succeeds.
   return persistDailyActionSuggestions(
     userId,
-    plannerContext,
-    validatedPlan
+    enrichedPlannerContext,
+    validatedPlan,
   );
 }

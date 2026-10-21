@@ -193,3 +193,154 @@ test(
     );
   }
 );
+
+
+test('rejects an exact duplicate of a pending suggestion', () => {
+  const context = createContext();
+
+  context.pendingSuggestions = [
+    {
+      id: 44,
+      title: 'Solve one LeetCode problem',
+      goalId: 4,
+      priority: 1,
+    },
+  ];
+
+  assert.throws(
+    () =>
+      validateSuggestionAgainstContext(
+        createSuggestion('Solve one LeetCode problem'),
+        context,
+      ),
+  );
+});
+
+
+test(
+  'rejects a goal absent from active planner context',
+  () => {
+    const suggestion = {
+      ...createSuggestion(
+        'Complete one workout'
+      ),
+      goalId: 6,
+    };
+
+    assert.throws(
+      () =>
+        validateSuggestionAgainstContext(
+          suggestion,
+          createContext()
+        ),
+      {
+        message:
+          'DAILY_PLANNER_GOAL_NOT_ACTIVE_IN_CONTEXT',
+      }
+    );
+  }
+);
+
+test(
+  'allows a suggestion without a goal',
+  () => {
+    const suggestion = {
+      ...createSuggestion(
+        'Build one small AI feature'
+      ),
+      goalId: null,
+    };
+
+    assert.equal(
+      validateSuggestionAgainstContext(
+        suggestion,
+        createContext()
+      ),
+      suggestion
+    );
+  }
+);
+
+test(
+  'rejects a highly overlapping existing action title',
+  () => {
+    const context = createContext();
+
+    context.currentActions.pending = [
+      {
+        id: 55,
+        title:
+          'Review recent coding solutions',
+      },
+    ];
+
+    assert.throws(
+      () =>
+        validateSuggestionAgainstContext(
+          createSuggestion(
+            'Review recent coding solutions today'
+          ),
+          context
+        ),
+      {
+        message:
+          'DUPLICATE_EXISTING_ACTION',
+      }
+    );
+  }
+);
+
+test(
+  'rejects a highly overlapping pending suggestion',
+  () => {
+    const context = createContext();
+
+    context.pendingSuggestions = [
+      {
+        id: 56,
+        title:
+          'Build one small AI feature',
+      },
+    ];
+
+    assert.throws(
+      () =>
+        validateSuggestionAgainstContext(
+          createSuggestion(
+            'Build one small AI feature today'
+          ),
+          context
+        ),
+      {
+        message:
+          'DUPLICATE_PENDING_SUGGESTION',
+      }
+    );
+  }
+);
+
+test(
+  'rejects a highly overlapping suggestion in the same batch',
+  () => {
+    const suggestions = [
+      createSuggestion(
+        'Review recent coding solutions'
+      ),
+      createSuggestion(
+        'Review recent coding solutions today'
+      ),
+    ];
+
+    assert.throws(
+      () =>
+        validateDailyPlannerSuggestions(
+          suggestions,
+          createContext()
+        ),
+      {
+        message:
+          'DUPLICATE_GENERATED_SUGGESTION',
+      }
+    );
+  }
+);
