@@ -11,7 +11,7 @@ export async function getUserContext(
 
     const {
       query,
-    } = req.body;
+    } = req.body ?? {};
 
     const context =
       await assembleContext(

@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 
+import { getAuthCookieName } from '../config/auth-cookie.js';
+
 export function authenticate(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
@@ -11,9 +13,9 @@ export function authenticate(req, res, next) {
       token = authHeader.split(' ')[1];
     }
 
-    // Prefer cookie when available
+    // Otherwise use the auth cookie (browser clients)
     if (!token) {
-      token = req.cookies?.[process.env.JWT_COOKIE_NAME || 'growthos_tokennn'];
+      token = req.cookies?.[getAuthCookieName()];
     }
 
     if (!token) {

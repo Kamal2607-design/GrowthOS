@@ -21,10 +21,25 @@ import actionPlannerRoutes from './routes/action-planner.routes.js';
 import dailyGrowthLoopRoutes
   from './routes/daily-growth-loop.routes.js';
 
+const DEFAULT_CLIENT_ORIGIN = 'http://localhost:5173';
+
+// Browser clients authenticate with an httpOnly cookie, which requires an
+// explicit origin allow-list (a wildcard origin cannot carry credentials).
+// CLIENT_ORIGIN accepts a comma-separated list.
+function getAllowedOrigins() {
+  return (process.env.CLIENT_ORIGIN || DEFAULT_CLIENT_ORIGIN)
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: getAllowedOrigins(),
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan('dev'));

@@ -1,6 +1,14 @@
 import { db } from '../prisma/db.ts';
 import { createGoal } from './goal.service.js';
 import { createAction } from './action.service.js';
+import {
+  SUPPORTED_DOCUMENT_TYPES,
+  matchesDeclaredDocumentType,
+  removeStoredDocument,
+  resolveStoredDocument,
+  sanitizeUploadFileName,
+  saveUploadedDocument,
+} from './document-storage.service.js';
 
 export async function createDocument(
   userId,
@@ -32,12 +40,20 @@ export async function createDocument(
     throw new Error('INVALID_DOCUMENT_FILE_SIZE');
   }
 
+  // The path must point inside this user's document storage;
+  // arbitrary server paths are rejected.
+  const { storedPath } =
+    await resolveStoredDocument(
+      userId,
+      filePath
+    );
+
   const document =
     await db.orm.public.Document.create({
       userId,
 
       fileName: fileName.trim(),
-      filePath: filePath.trim(),
+      filePath: storedPath,
       mimeType: mimeType.trim(),
       fileSize,
 
@@ -50,6 +66,64 @@ export async function createDocument(
     });
 
   return document;
+}
+
+
+export async function uploadDocument(
+  userId,
+  {
+    fileName,
+    mimeType,
+    buffer,
+  }
+) {
+  const safeFileName =
+    sanitizeUploadFileName(fileName);
+
+  if (!safeFileName) {
+    throw new Error('DOCUMENT_FILE_NAME_REQUIRED');
+  }
+
+  if (!SUPPORTED_DOCUMENT_TYPES[mimeType]) {
+    throw new Error('UNSUPPORTED_DOCUMENT_TYPE');
+  }
+
+  if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+    throw new Error('DOCUMENT_FILE_EMPTY');
+  }
+
+  if (!matchesDeclaredDocumentType(buffer, mimeType)) {
+    throw new Error('DOCUMENT_CONTENT_TYPE_MISMATCH');
+  }
+
+  const stored =
+    await saveUploadedDocument(
+      userId,
+      {
+        buffer,
+        mimeType,
+      }
+    );
+
+  try {
+    return await createDocument(
+      userId,
+      {
+        fileName: safeFileName,
+        filePath: stored.filePath,
+        mimeType,
+        fileSize: stored.fileSize,
+      }
+    );
+  } catch (error) {
+    // Do not leave an orphaned file behind.
+    await removeStoredDocument(
+      userId,
+      stored.filePath
+    );
+
+    throw error;
+  }
 }
 
 
@@ -119,6 +193,13 @@ export async function deleteDocument(
       userId,
     })
     .delete();
+
+  // Best effort, after the record is gone. Paths outside
+  // the user's storage directory are never touched.
+  await removeStoredDocument(
+    userId,
+    document.filePath
+  );
 
   return document;
 }
@@ -378,9 +459,11 @@ export async function acceptMemoryCandidate(userId, candidateId) {
   try {
     memory = await db.orm.public.Memory.create({
       userId,
-      type: 'document_insight',
+      // Must be a type and source the Memory API accepts;
+      // sourceCandidateId links it back to the candidate.
+      type: 'insight',
       content: candidate.content.trim(),
-      source: `document-candidate:${candidate.id}`,
+      source: 'document',
       sourceCandidateId: candidate.id,
       importance,
     });

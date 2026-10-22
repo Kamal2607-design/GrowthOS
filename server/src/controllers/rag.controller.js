@@ -11,7 +11,7 @@ export async function generateRagAnswer(
 
     const {
       query,
-    } = req.body;
+    } = req.body ?? {};
 
     const result =
       await generateRagResponse(
@@ -74,9 +74,19 @@ export async function generateRagAnswer(
       });
     }
 
+    if (error.message?.startsWith('OLLAMA_')) {
+      return res.status(503).json({
+        success: false,
+        error:
+          'The AI assistant is temporarily unavailable',
+        code: 'AI_UNAVAILABLE',
+      });
+    }
+
+    // Covers INVALID_AI_RESPONSE_* and INVALID_AI_RECOMMENDED_ACTION.
     if (
-      error.message.startsWith(
-        'INVALID_AI_RESPONSE'
+      error.message?.startsWith(
+        'INVALID_AI_'
       )
     ) {
       return res.status(502).json({

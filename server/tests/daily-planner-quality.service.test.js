@@ -74,3 +74,30 @@ test('rejects a goal absent from the active planner context', () => {
     false
   );
 });
+
+test('ignores filler words when comparing titles', () => {
+  assert.equal(
+    areLikelyDuplicateTitles(
+      'Complete a short AI engineering task',
+      'Complete one AI engineering coding task'
+    ),
+    true
+  );
+});
+
+test('does not flag different tasks on the same topic', () => {
+  assert.equal(
+    areLikelyDuplicateTitles(
+      'Review one recent coding task for improvements',
+      'Complete one AI engineering coding task'
+    ),
+    false
+  );
+  assert.equal(
+    areLikelyDuplicateTitles(
+      'Track one fitness metric for abs',
+      'Complete one set of leg raises'
+    ),
+    false
+  );
+});

@@ -13,6 +13,10 @@ import {
   getDocumentById,
 } from './document.service.js';
 
+import {
+  resolveStoredDocument,
+} from './document-storage.service.js';
+
 
 const execFileAsync =
   promisify(execFile);
@@ -414,6 +418,19 @@ export async function extractDocumentText(
       document.mimeType
     );
 
+  /*
+   * Only files inside this user's document storage may be
+   * read. Documents registered earlier with an arbitrary
+   * server path are rejected here and must be re-uploaded.
+   * The resolved path is absolute, so pdftoppm/tesseract
+   * can never parse it as an option.
+   */
+  const { absolutePath } =
+    await resolveStoredDocument(
+      userId,
+      document.filePath
+    );
+
 
   await db.orm.public.Document
     .where({
@@ -430,7 +447,7 @@ export async function extractDocumentText(
 
     const result =
       await extractor(
-        document.filePath
+        absolutePath
       );
 
 

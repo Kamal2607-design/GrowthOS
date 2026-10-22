@@ -37,7 +37,7 @@ export async function createCurrentVision(req, res) {
       values,
       identity,
       futureSelf,
-    } = req.body;
+    } = req.body ?? {};
 
     if (!statement || !statement.trim()) {
       return res.status(400).json({
@@ -89,7 +89,7 @@ export async function updateCurrentVision(req, res) {
       values,
       identity,
       futureSelf,
-    } = req.body;
+    } = req.body ?? {};
 
     if (
       statement === undefined &&

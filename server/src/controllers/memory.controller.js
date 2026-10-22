@@ -18,7 +18,7 @@ export async function createUserMemory(req, res) {
 
     const memory = await createMemory(
       userId,
-      req.body
+      req.body ?? {}
     );
 
     return res.status(201).json({
@@ -155,7 +155,7 @@ export async function updateUserMemory(
       await updateMemory(
         userId,
         memoryId,
-        req.body
+        req.body ?? {}
       );
 
     return res.status(200).json({

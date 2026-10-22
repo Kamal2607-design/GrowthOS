@@ -1,3 +1,5 @@
+import { db } from '../prisma/db.ts';
+
 import {
   assembleContext,
 } from './context-assembly.service.js';
@@ -9,6 +11,55 @@ import {
 import {
   createActionSuggestion,
 } from './action-suggestion.service.js';
+
+import {
+  filterNewSuggestions,
+  loadOpenTitles,
+} from './suggestion-dedupe.service.js';
+
+import {
+  assessSuggestionGoalRelevance,
+} from './ai/daily-planner-goal-relevance.service.js';
+
+/**
+ * Rejects the whole plan if any suggestion references a goal
+ * outside the assembled context. Runs before anything is written.
+ */
+export function assertValidPlannerGoalReferences(
+  suggestions,
+  goals
+) {
+  const validGoalIds =
+    new Set(
+      (goals ?? []).map(
+        (goal) => goal.id
+      )
+    );
+
+  for (const suggestion of suggestions) {
+    const goalId =
+      suggestion.goalId;
+
+    if (
+      goalId !== null &&
+      !validGoalIds.has(goalId)
+    ) {
+      console.error(
+        'Invalid AI goal reference:',
+        {
+          goalId,
+          validGoalIds: [
+            ...validGoalIds,
+          ],
+        }
+      );
+
+      throw new Error(
+        'AI_SUGGESTION_REFERENCES_INVALID_GOAL'
+      );
+    }
+  }
+}
 
 export async function generateActionSuggestions(
   userId,
@@ -51,74 +102,92 @@ export async function generateActionSuggestions(
     );
 
   /*
-   * 3. Validate goal IDs against the
-   *    actual context before creating
-   *    database records.
+   * 3. Validate goal IDs for the whole
+   *    plan before creating any records.
    */
-  const validGoalIds =
-    new Set(
-      context.goals.map(
-        (goal) => goal.id
-      )
-    );
+  assertValidPlannerGoalReferences(
+    plan.suggestions,
+    context.goals
+  );
 
-  const suggestions = [];
+  /*
+   * 4. A suggestion filed under a test goal or an
+   *    unrelated goal keeps its content but loses
+   *    the goal link.
+   */
+  const candidates = plan.suggestions.map(
+    (suggestion) => {
+      const relevance =
+        assessSuggestionGoalRelevance(
+          suggestion,
+          context.goals
+        );
 
-  for (
-    const suggestion
-      of plan.suggestions
-  ) {
-    let goalId =
-      suggestion.goalId;
-
-    if (
-    goalId !== null &&
-    !validGoalIds.has(goalId)
-    ) {
-    console.error(
-        'Invalid AI goal reference:',
-        {
-        goalId,
-        validGoalIds: [
-            ...validGoalIds,
-        ],
-        }
-    );
-
-    throw new Error(
-        'AI_SUGGESTION_REFERENCES_INVALID_GOAL'
-    );
+      return relevance.reason === 'placeholder_goal' ||
+        relevance.reason === 'domain_mismatch'
+        ? { ...suggestion, goalId: null }
+        : suggestion;
     }
+  );
 
-    const createdSuggestion =
-      await createActionSuggestion(
-        userId,
-        {
-          title:
-            suggestion.title,
+  /*
+   * 5. Skip anything that repeats open work, then
+   *    persist the rest in one transaction so a
+   *    failure leaves none of them behind.
+   */
+  let skippedCount = 0;
 
-          description:
-            suggestion.description,
+  const suggestions =
+    await db.transaction(async (tx) => {
+      const { fresh, skipped } =
+        filterNewSuggestions(
+          candidates,
+          await loadOpenTitles(tx, userId)
+        );
 
-          goalId,
+      skippedCount = skipped.length;
 
-          priority:
-            suggestion.priority,
+      const created = [];
 
-          reasoning:
-            suggestion.reasoning,
+      for (
+        const suggestion
+          of fresh
+      ) {
+        const createdSuggestion =
+          await createActionSuggestion(
+            userId,
+            {
+              title:
+                suggestion.title,
 
-          source: 'ai',
-        }
-      );
+              description:
+                suggestion.description,
 
-    suggestions.push(
-      createdSuggestion
-    );
-  }
+              goalId:
+                suggestion.goalId,
+
+              priority:
+                suggestion.priority,
+
+              reasoning:
+                suggestion.reasoning,
+
+              source: 'ai',
+            },
+            tx
+          );
+
+        created.push(
+          createdSuggestion
+        );
+      }
+
+      return created;
+    });
 
   return {
     query: normalizedQuery,
     suggestions,
+    skippedCount,
   };
 }

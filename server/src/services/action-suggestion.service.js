@@ -57,12 +57,16 @@ async function findActiveDuplicateAction(
   return duplicateAction || null;
 }
 
-async function verifyGoalOwnership(userId, goalId) {
+async function verifyGoalOwnership(
+  userId,
+  goalId,
+  client = db
+) {
   if (goalId === null || goalId === undefined) {
     return;
   }
 
-  const goal = await db.orm.public.Goal.first({
+  const goal = await client.orm.public.Goal.first({
     id: goalId,
     userId,
   });
@@ -74,7 +78,8 @@ async function verifyGoalOwnership(userId, goalId) {
 
 async function verifyReflectionOwnership(
   userId,
-  reflectionId
+  reflectionId,
+  client = db
 ) {
   if (
     reflectionId === null ||
@@ -84,7 +89,7 @@ async function verifyReflectionOwnership(
   }
 
   const reflection =
-    await db.orm.public.Reflection.first({
+    await client.orm.public.Reflection.first({
       id: reflectionId,
       userId,
     });
@@ -104,7 +109,9 @@ export async function createActionSuggestion(
     priority,
     reasoning,
     source,
-  }
+  },
+  // Pass a transaction (tx) to create the suggestion inside it.
+  client = db
 ) {
   if (!title || !title.trim()) {
     throw new Error(
@@ -141,16 +148,18 @@ export async function createActionSuggestion(
 
   await verifyGoalOwnership(
     userId,
-    goalId
+    goalId,
+    client
   );
 
   await verifyReflectionOwnership(
     userId,
-    reflectionId
+    reflectionId,
+    client
   );
 
   const suggestion =
-    await db.orm.public.ActionSuggestion.create({
+    await client.orm.public.ActionSuggestion.create({
       userId,
 
       goalId:
@@ -275,14 +284,16 @@ export async function acceptActionSuggestion(
       );
     }
 
-    const updatedSuggestion =
+    // updateAll keeps the status filter in the UPDATE itself,
+    // so a concurrent accept/reject cannot both succeed.
+    const [updatedSuggestion] =
       await tx.orm.public.ActionSuggestion
         .where({
           id: suggestionId,
           userId,
           status: 'pending',
         })
-        .update({
+        .updateAll({
           status: 'accepted',
         });
 
@@ -328,15 +339,21 @@ export async function rejectActionSuggestion(
     throw new Error('SUGGESTION_NOT_PENDING');
   }
 
-  const updatedSuggestion =
+  const [updatedSuggestion] =
     await db.orm.public.ActionSuggestion
       .where({
         id: suggestionId,
         userId,
+        status: 'pending',
       })
-      .update({
+      .updateAll({
         status: 'rejected',
       });
+
+  // Accepted or rejected by a concurrent request.
+  if (!updatedSuggestion) {
+    throw new Error('SUGGESTION_NOT_PENDING');
+  }
 
   return updatedSuggestion;
 }

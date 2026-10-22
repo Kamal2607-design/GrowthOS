@@ -11,7 +11,7 @@ export async function generateActionPlanController(
 
     const {
       query,
-    } = req.body;
+    } = req.body ?? {};
 
     const result =
       await generateActionSuggestions(
@@ -24,6 +24,8 @@ export async function generateActionPlanController(
       query: result.query,
       suggestions:
         result.suggestions,
+      skippedCount:
+        result.skippedCount,
     });
   } catch (error) {
     console.error(
@@ -74,6 +76,15 @@ export async function generateActionPlanController(
         success: false,
         error:
           'AI returned an invalid action plan',
+      });
+    }
+
+    if (error.message?.startsWith('OLLAMA_')) {
+      return res.status(503).json({
+        success: false,
+        error:
+          'The AI planner is temporarily unavailable',
+        code: 'AI_UNAVAILABLE',
       });
     }
 

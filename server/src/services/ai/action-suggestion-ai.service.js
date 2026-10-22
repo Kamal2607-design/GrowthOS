@@ -1,62 +1,69 @@
 import { generateWithQwen } from './qwen.service.js';
 import { buildActionSuggestionPrompt } from './action-prompt.service.js';
 
+const MAX_SUGGESTIONS = 5;
+
+/**
+ * Validates and normalises Qwen's per-goal suggestions. Entries without a
+ * usable title are dropped; other fields are type-checked and defaulted.
+ */
+export function normalizeActionSuggestions(parsed) {
+  if (!parsed || !Array.isArray(parsed.suggestions)) {
+    throw new Error('INVALID_AI_SUGGESTIONS');
+  }
+
+  const text = (value) =>
+    typeof value === 'string' && value.trim() ? value.trim() : null;
+
+  return parsed.suggestions
+    .filter(
+      (suggestion) =>
+        suggestion &&
+        typeof suggestion === 'object' &&
+        text(suggestion.title)
+    )
+    .slice(0, MAX_SUGGESTIONS)
+    .map((suggestion) => ({
+      title: text(suggestion.title),
+      description: text(suggestion.description),
+      reasoning: text(suggestion.reasoning),
+      priority:
+        Number.isInteger(suggestion.priority) &&
+        suggestion.priority >= 1 &&
+        suggestion.priority <= 5
+          ? suggestion.priority
+          : 3,
+    }));
+}
+
 export async function generateActionSuggestions({
   vision,
   goal,
+  existingTitles = [],
 }) {
   const prompt = buildActionSuggestionPrompt({
     vision,
     goal,
+    existingTitles,
   });
 
-  console.log('Sending prompt to Qwen...');
-
-  const result = await generateWithQwen(prompt);
-
-  console.log('Qwen raw response:');
-  console.log(result.response);
+  const result = await generateWithQwen(prompt, {
+    maxTokens: 1024,
+  });
 
   let parsed;
 
   try {
     parsed = JSON.parse(result.response);
-  } catch (error) {
-    console.error('Failed to parse Qwen JSON:', error);
-    console.error('Raw Qwen response:', result.response);
-
-    throw new Error(
-      'Qwen returned an invalid JSON response.'
-    );
+  } catch {
+    throw new Error('QWEN_INVALID_JSON_RESPONSE');
   }
 
-  console.log(
-    'Parsed Qwen response:',
-    JSON.stringify(parsed, null, 2)
-  );
+  const suggestions = normalizeActionSuggestions(parsed);
 
-  if (
-    !parsed ||
-    !Array.isArray(parsed.suggestions)
-  ) {
-    throw new Error(
-      'Qwen response does not contain a valid suggestions array.'
-    );
+  if (suggestions.length === 0) {
+    throw new Error('INVALID_AI_SUGGESTIONS');
   }
-
-  const suggestions = parsed.suggestions
-    .map((suggestion) => ({
-      title: suggestion.title,
-      description: suggestion.description,
-      reasoning: suggestion.reasoning,
-      priority: suggestion.priority,
-    }))
-    .filter((suggestion) => suggestion.title);
-
-  console.log(
-    'Validated AI suggestions:',
-    JSON.stringify(suggestions, null, 2)
-  );
 
   return suggestions;
 }

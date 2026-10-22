@@ -23,7 +23,9 @@ export function buildContextResponsePrompt(
               ).toFixed(3)})`
           )
           .join('\n')
-      : 'No sufficiently relevant memories found.';
+      : context.memoryStatus === 'unavailable'
+        ? 'Memory retrieval is unavailable. Do not assume no relevant memories exist.'
+        : 'No sufficiently relevant memories found.';
 
   const goalContext =
     goals.length > 0
