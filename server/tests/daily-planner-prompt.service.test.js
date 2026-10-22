@@ -254,3 +254,70 @@ test('rejects missing planner context', () => {
     },
   );
 });
+
+test('marks only explicitly labelled placeholder goals', () => {
+  const prompt = buildDailyPlannerPrompt(
+    createContext({
+      activeGoals: [
+        {
+          id: 5,
+          title: 'Get six-pack abs by year-end',
+          description: null,
+          priority: 1,
+          targetDate: null,
+        },
+        {
+          id: 6,
+          title: 'INSUFFICIENT DATA GOAL',
+          description: null,
+          priority: 0,
+          targetDate: null,
+        },
+      ],
+    }),
+  );
+
+  const placeholderNotes = prompt.match(
+    /Planning status: Test\/placeholder goal/g,
+  ) ?? [];
+
+  // One annotation on Goal 6 plus the rule that references it.
+  assert.equal(placeholderNotes.length, 2);
+  assert.match(
+    prompt,
+    /Title: INSUFFICIENT DATA GOAL\nDescription: None\nPriority: 0\nTarget Date: None\nPlanning status: Test\/placeholder goal/,
+  );
+  assert.doesNotMatch(
+    prompt,
+    /Title: Get six-pack abs by year-end\nDescription: None\nPriority: 1\nTarget Date: None\nPlanning status/,
+  );
+});
+
+test('forbids same-day reflection claims when no reflection exists', () => {
+  const prompt = buildDailyPlannerPrompt(
+    createContext({
+      reflection: null,
+      reflectionAnalysis: null,
+    }),
+  );
+
+  assert.match(prompt, /No reflection has been recorded today/);
+  assert.match(
+    prompt,
+    /Do not claim, quote, or imply that the user reflected, reported,/,
+  );
+  assert.match(prompt, /Never cite "today's reflection"/);
+});
+
+test('labels relevant memories as historical context', () => {
+  const prompt = buildDailyPlannerPrompt(createContext());
+
+  assert.match(
+    prompt,
+    /These memories are historical context\. They are not today's\nreflection and not evidence of anything done today\./,
+  );
+  assert.match(
+    prompt,
+    /must not be presented\n   as today's reflection or as proof of a same-day activity/,
+  );
+});

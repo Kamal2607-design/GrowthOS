@@ -69,12 +69,39 @@ export async function generateDailyGrowthSuggestionsController(
       success: true,
       createdCount: result.createdCount,
       suggestions: result.suggestions,
+      attempts: result.attempts,
+      skippedDuplicates: result.skippedDuplicates,
+      intelligence: result.intelligence,
     });
   } catch (error) {
     console.error(
       'Daily growth suggestion generation error:',
       error
     );
+
+    if (DEPENDENCY_FAILURES.has(error.message)) {
+      return res.status(503).json({
+        success: false,
+        error: 'Daily context is temporarily unavailable',
+        code: error.message,
+      });
+    }
+
+    if (error.message?.startsWith('OLLAMA_TIMEOUT')) {
+      return res.status(503).json({
+        success: false,
+        error: 'The AI planner took too long to answer',
+        code: 'DAILY_PLANNER_AI_TIMEOUT',
+      });
+    }
+
+    if (error.message?.startsWith('OLLAMA_')) {
+      return res.status(503).json({
+        success: false,
+        error: 'The AI planner is temporarily unavailable',
+        code: 'DAILY_PLANNER_AI_UNAVAILABLE',
+      });
+    }
 
     switch (error.message) {
       case 'INVALID_USER_ID':
@@ -93,6 +120,16 @@ export async function generateDailyGrowthSuggestionsController(
       case 'INVALID_DAILY_PLANNER_SUGGESTION_GOAL_ID':
       case 'INVALID_REFLECTION_ID':
       case 'INVALID_NORMALIZED_SUGGESTION_TITLE':
+      case 'QWEN_EMPTY_RESPONSE':
+      case 'QWEN_INVALID_JSON_RESPONSE':
+      case 'INVALID_DAILY_PLANNER_RESPONSE':
+      case 'INVALID_DAILY_PLANNER_SUGGESTIONS':
+      case 'INVALID_DAILY_PLANNER_SUGGESTION':
+      case 'INVALID_DAILY_PLANNER_GOAL_REFERENCE':
+      case 'DAILY_PLANNER_GOAL_NOT_ACTIVE_IN_CONTEXT':
+      case 'DAILY_PLANNER_GOAL_IS_PLACEHOLDER':
+      case 'DAILY_PLANNER_GOAL_MISMATCH':
+      case 'DAILY_PLANNER_UNSUPPORTED_REFLECTION_CLAIM':
         return res.status(422).json({
           success: false,
           error: error.message,

@@ -128,7 +128,9 @@ export async function generateActionPlan(
     );
 
   const result =
-    await generateWithQwen(prompt);
+    await generateWithQwen(prompt, {
+      maxTokens: 1024,
+    });
 
     console.log(
     'Qwen Action Planner Response:',

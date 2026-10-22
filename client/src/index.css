@@ -1,0 +1,241 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/*
+ * GrowthOS "Aurora" theme.
+ * Violet is the brand, a violet→magenta gradient marks everything the AI
+ * proposes, emerald is growth, sky is progress, amber is streaks/energy.
+ * Every token is redefined for dark mode below.
+ */
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-display: Sora, Inter, ui-sans-serif, system-ui, sans-serif;
+
+  --color-ground: #F6F4FE;
+  --color-surface: #FFFFFF;
+  --color-raised: #FAF9FF;
+  --color-ink: #17122B;
+  --color-ink-soft: #3D3756;
+  --color-muted: #625C78;
+  --color-line: #E6E2F3;
+  --color-line-strong: #D6D0EA;
+  --color-field: #CBC4E2;
+  --color-subtle: #F0EDF9;
+  --color-hover: #ECE8FA;
+
+  --color-brand: #6A3DF5;
+  --color-brand-strong: #5428E0;
+  --color-brand-soft: #EEE9FF;
+  --color-brand-ink: #4B21C9;
+
+  --color-ai-from: #7C3AED;
+  --color-ai-to: #BE185D;
+  --color-propose: #C4A6FF;
+  --color-propose-ground: #FBF9FF;
+  --color-propose-ink: #6D28D9;
+  --color-propose-soft: #F3ECFF;
+
+  --color-success: #047857;
+  --color-success-fill: #10B981;
+  --color-success-soft: #E3F8EF;
+  --color-progress: #0369A1;
+  --color-progress-fill: #0EA5E9;
+  --color-progress-soft: #E0F2FE;
+  --color-danger: #BE123C;
+  --color-danger-soft: #FFE4EA;
+  --color-warn: #B45309;
+  --color-warn-soft: #FEF3C7;
+  --color-energy: #EA580C;
+  --color-energy-soft: #FFEDD5;
+
+  --color-chart-activity: #6A3DF5;
+  --color-chart-productivity: #0284C7;
+  --color-chart-grid: #EEEAF7;
+
+  --shadow-card: 0 1px 2px rgb(23 18 43 / 0.04), 0 4px 16px -6px rgb(76 33 201 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(23 18 43 / 0.06), 0 12px 28px -10px rgb(76 33 201 / 0.22);
+
+  --animate-fade-up: fade-up 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-pop: pop 0.36s cubic-bezier(0.2, 0.8, 0.2, 1.4) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-toast-in: toast-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-ground: #0F0B1E;
+  --color-surface: #1B1631;
+  --color-raised: #221C3B;
+  --color-ink: #F4F1FF;
+  --color-ink-soft: #D6D0EE;
+  --color-muted: #A6A0BF;
+  --color-line: #2E2749;
+  --color-line-strong: #3A3259;
+  --color-field: #4A4170;
+  --color-subtle: #241E3D;
+  --color-hover: #2A2347;
+
+  --color-brand: #7B5CFA;
+  --color-brand-strong: #A992FF;
+  --color-brand-soft: #2A2052;
+  --color-brand-ink: #C9B9FF;
+
+  --color-ai-from: #7C3AED;
+  --color-ai-to: #C0267A;
+  --color-propose: #6E56B8;
+  --color-propose-ground: #1F1838;
+  --color-propose-ink: #D2C2FF;
+  --color-propose-soft: #2F2458;
+
+  --color-success: #34D399;
+  --color-success-fill: #10B981;
+  --color-success-soft: #12322A;
+  --color-progress: #7DD3FC;
+  --color-progress-fill: #0EA5E9;
+  --color-progress-soft: #0C2D44;
+  --color-danger: #FDA4AF;
+  --color-danger-soft: #3A1424;
+  --color-warn: #FCD34D;
+  --color-warn-soft: #3A2A0A;
+  --color-energy: #FB923C;
+  --color-energy-soft: #3B1E0B;
+
+  --color-chart-activity: #8B6DFB;
+  --color-chart-productivity: #0E9FD8;
+  --color-chart-grid: #2B2445;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px -8px rgb(0 0 0 / 0.5);
+  --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.35), 0 14px 30px -10px rgb(124 58 237 / 0.35);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(1100px 520px at 0% -12%, rgb(124 58 237 / 0.11), transparent 60%),
+    radial-gradient(900px 420px at 100% -8%, rgb(219 39 119 / 0.08), transparent 60%),
+    var(--color-ground);
+  background-attachment: fixed;
+}
+
+:root[data-theme="dark"] body {
+  background:
+    radial-gradient(1100px 520px at 0% -12%, rgb(124 58 237 / 0.22), transparent 60%),
+    radial-gradient(900px 420px at 100% -8%, rgb(219 39 119 / 0.14), transparent 60%),
+    var(--color-ground);
+  background-attachment: fixed;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+button,
+summary {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Gradient used for AI-proposed content and AI actions. */
+.ai-gradient {
+  background-image: linear-gradient(120deg, var(--color-ai-from), var(--color-ai-to));
+}
+
+.ai-gradient-text {
+  background-image: linear-gradient(120deg, var(--color-ai-from), var(--color-ai-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+:root[data-theme="dark"] .ai-gradient-text {
+  background-image: linear-gradient(120deg, #B79CFF, #F472B6);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--color-subtle) 0%, var(--color-hover) 50%, var(--color-subtle) 100%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift, 0px), 85vh, 0) rotate(var(--spin, 540deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

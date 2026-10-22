@@ -16,7 +16,7 @@ export async function createCurrentUserGoal(req, res) {
       status,
       priority,
       targetDate,
-    } = req.body;
+    } = req.body ?? {};
 
     if (!title || !title.trim()) {
       return res.status(400).json({
@@ -153,7 +153,7 @@ export async function updateCurrentUserGoal(req, res) {
       status,
       priority,
       targetDate,
-    } = req.body;
+    } = req.body ?? {};
 
     if (
       title === undefined &&

@@ -12,7 +12,7 @@ export async function searchUserMemories(
     const {
       query,
       limit,
-    } = req.body;
+    } = req.body ?? {};
 
     let parsedLimit = 5;
 

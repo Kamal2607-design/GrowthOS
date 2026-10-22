@@ -55,10 +55,12 @@ function endOfDay(date) {
   return result;
 }
 
+// Days are bucketed at local midnight, so label them with the local date.
+// toISOString() would shift every label a day early east of UTC.
 function formatDate(date) {
-  return date
-    .toISOString()
-    .slice(0, 10);
+  const pad = (value) => String(value).padStart(2, '0');
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
 function calculateCompletionPercentage(

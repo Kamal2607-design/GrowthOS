@@ -9,6 +9,10 @@ import {
 } from './action-suggestion.service.js';
 
 import {
+  areLikelyDuplicateTitles,
+} from './ai/daily-planner-quality.service.js';
+
+import {
   getDayRange,buildDailyProgress
 } from '../helpers/dailyprogress.helper.js';
 
@@ -91,99 +95,107 @@ async function getUserGoals(userId) {
     .all();
 }
 
-async function expirePendingReflectionSuggestions(
+function normalizeRecommendations(recommendedActions) {
+  return (Array.isArray(recommendedActions) ? recommendedActions : [])
+    .filter(
+      (recommendation) =>
+        recommendation &&
+        typeof recommendation.title === 'string' &&
+        recommendation.title.trim()
+    )
+    .map((recommendation) => ({
+      title: recommendation.title.trim(),
+      reason:
+        typeof recommendation.reason === 'string' &&
+        recommendation.reason.trim()
+          ? recommendation.reason.trim()
+          : null,
+    }));
+}
+
+
+/*
+ * Replaces this reflection's pending AI suggestions with the
+ * new analysis's recommendations, in one transaction:
+ * - previous pending suggestions for the reflection are expired
+ *   (the new analysis supersedes them, even when it recommends nothing);
+ * - recommendations repeating an active Action, another pending
+ *   suggestion, or each other are skipped.
+ * A failure leaves the previous suggestions untouched.
+ */
+async function createReflectionSuggestions(
   userId,
-  reflectionId
+  reflectionId,
+  recommendedActions
 ) {
-  const existingSuggestions =
-    await db.orm.public.ActionSuggestion
+  const recommendations =
+    normalizeRecommendations(recommendedActions);
+
+  return db.transaction(async (tx) => {
+    await tx.orm.public.ActionSuggestion
       .where({
         userId,
         reflectionId,
         source: 'ai',
         status: 'pending',
       })
-      .all();
-
-  console.log(
-    `Found ${existingSuggestions.length} pending AI suggestions for reflection ${reflectionId}`
-  );
-
-  for (const suggestion of existingSuggestions) {
-    await db.orm.public.ActionSuggestion
-      .where({
-        id: suggestion.id,
-        userId,
-      })
-      .update({
+      .updateAll({
         status: 'expired',
       });
-  }
 
-  return existingSuggestions.length;
-}
-
-
-async function createReflectionSuggestions(
-  userId,
-  reflectionId,
-  recommendedActions
-) {
-  if (
-    !Array.isArray(recommendedActions) ||
-    recommendedActions.length === 0
-  ) {
-    return [];
-  }
-
-  // ---------------------------------------------
-  // 1. Expire previous pending AI suggestions
-  // ---------------------------------------------
-
-  const expiredCount =
-    await expirePendingReflectionSuggestions(
-      userId,
-      reflectionId
+    const activeActions = (
+      await tx.orm.public.Action
+        .where({ userId })
+        .all()
+    ).filter((action) =>
+      ['pending', 'in_progress'].includes(action.status)
     );
 
-  console.log(
-    `Expired ${expiredCount} previous AI suggestions for reflection ${reflectionId}`
-  );
+    const pendingSuggestions =
+      await tx.orm.public.ActionSuggestion
+        .where({
+          userId,
+          status: 'pending',
+        })
+        .all();
 
-  // ---------------------------------------------
-  // 2. Create new suggestions
-  // ---------------------------------------------
+    const knownTitles = [
+      ...activeActions.map((action) => action.title),
+      ...pendingSuggestions.map((suggestion) => suggestion.title),
+    ];
 
-  const createdSuggestions = [];
+    const createdSuggestions = [];
 
-  for (const recommendation of recommendedActions) {
-    if (
-      !recommendation ||
-      !recommendation.title ||
-      !recommendation.title.trim()
-    ) {
-      continue;
+    for (const recommendation of recommendations) {
+      if (
+        knownTitles.some((title) =>
+          areLikelyDuplicateTitles(recommendation.title, title)
+        )
+      ) {
+        continue;
+      }
+
+      const suggestion =
+        await createActionSuggestion(
+          userId,
+          {
+            title: recommendation.title,
+            description: null,
+            goalId: null,
+            reflectionId,
+            priority: 0,
+            reasoning: recommendation.reason,
+            source: 'ai',
+          },
+          tx
+        );
+
+      createdSuggestions.push(suggestion);
+      knownTitles.push(suggestion.title);
     }
 
-    const suggestion =
-      await createActionSuggestion(
-        userId,
-        {
-          title: recommendation.title,
-          description: null,
-          goalId: null,
-          reflectionId,
-          priority: 0,
-          reasoning:
-            recommendation.reason,
-          source: 'ai',
-        }
-      );
-
-    createdSuggestions.push(suggestion);
-  }
-
-  return createdSuggestions;
+    return createdSuggestions;
+  });
 }
 
 

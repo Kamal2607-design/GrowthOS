@@ -344,3 +344,165 @@ test(
     );
   }
 );
+
+function createMultiGoalContext() {
+  return {
+    activeGoals: [
+      {
+        id: 4,
+        title:
+          'Become a strong Full Stack AI Engineer and make more money',
+      },
+      {
+        id: 5,
+        title: 'Get six-pack abs by year-end',
+      },
+      {
+        id: 6,
+        title: 'INSUFFICIENT DATA GOAL',
+      },
+    ],
+
+    currentActions: {
+      pending: [],
+      inProgress: [],
+    },
+
+    pendingSuggestions: [],
+
+    reflection: null,
+  };
+}
+
+test(
+  'rejects a suggestion assigned to a placeholder goal',
+  () => {
+    assert.throws(
+      () =>
+        validateSuggestionAgainstContext(
+          {
+            ...createSuggestion(
+              'Review and adjust diet plan'
+            ),
+            goalId: 6,
+          },
+          createMultiGoalContext()
+        ),
+      {
+        message:
+          'DAILY_PLANNER_GOAL_IS_PLACEHOLDER',
+      }
+    );
+  }
+);
+
+test(
+  'rejects a fitness suggestion assigned to the AI engineering goal',
+  () => {
+    assert.throws(
+      () =>
+        validateSuggestionAgainstContext(
+          {
+            ...createSuggestion(
+              'Complete one set of leg raises'
+            ),
+            goalId: 4,
+          },
+          createMultiGoalContext()
+        ),
+      {
+        message:
+          'DAILY_PLANNER_GOAL_MISMATCH',
+      }
+    );
+  }
+);
+
+test(
+  'accepts correctly assigned fitness and AI engineering suggestions',
+  () => {
+    const result =
+      validateDailyPlannerSuggestions(
+        [
+          {
+            ...createSuggestion(
+              'Complete one set of leg raises'
+            ),
+            goalId: 5,
+          },
+          {
+            ...createSuggestion(
+              'Build one small AI feature'
+            ),
+            goalId: 4,
+          },
+          {
+            ...createSuggestion(
+              'Plan tomorrow\'s top three priorities'
+            ),
+            goalId: null,
+          },
+        ],
+        createMultiGoalContext()
+      );
+
+    assert.equal(
+      result.length,
+      3
+    );
+  }
+);
+
+test(
+  'rejects a claim about a same-day reflection that does not exist',
+  () => {
+    assert.throws(
+      () =>
+        validateSuggestionAgainstContext(
+          {
+            ...createSuggestion(
+              'Complete one set of leg raises'
+            ),
+            goalId: 5,
+            reasoning:
+              'Based on today\'s reflection, you already completed leg raises.',
+          },
+          createMultiGoalContext()
+        ),
+      {
+        message:
+          'DAILY_PLANNER_UNSUPPORTED_REFLECTION_CLAIM',
+      }
+    );
+  }
+);
+
+test(
+  'rejects the whole batch when one suggestion has a goal mismatch',
+  () => {
+    assert.throws(
+      () =>
+        validateDailyPlannerSuggestions(
+          [
+            {
+              ...createSuggestion(
+                'Build one small AI feature'
+              ),
+              goalId: 4,
+            },
+            {
+              ...createSuggestion(
+                'Review and adjust diet plan'
+              ),
+              goalId: 4,
+            },
+          ],
+          createMultiGoalContext()
+        ),
+      {
+        message:
+          'DAILY_PLANNER_GOAL_MISMATCH',
+      }
+    );
+  }
+);
